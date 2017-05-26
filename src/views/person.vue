@@ -1,10 +1,12 @@
 <template lang="pug">
 #person
   div.headimg-wrap
-    img.headimg(:src="user.avatar || '/static/img/youngon.gif'")
-    p.nickname(@click="$store.commit('LOGINBOX', true)") {{user.nickname || user.stuid || '账号登录'}}
+    img.headimg(:src="user.avatar ? `/uploads/${user.avatar}` : '/static/img/youngon.gif'")
+    p.nickname(@click="$store.commit('LOGINBOX', true)")
+      span {{user.nickname || user.stuid || '账号登录'}}
+      span(v-if="user._id") [{{typeFormat(user.type)}}]
   mu-list
-    mu-list-item(title="播放历史")
+    mu-list-item(v-if="!user.stuid", title="绑定学号")
       mu-icon(slot="left", value="history")
     mu-list-item(title="我的收藏")
       mu-icon(slot="left", value="favorite")
@@ -34,6 +36,11 @@ export default {
   methods: {
     ...mapActions([
     ]),
+    typeFormat(type) {
+      if (type > 9) return '管理员';
+      if (type >= 2) return '内测用户';
+      return '普通用户';
+    },
   },
 };
 </script>

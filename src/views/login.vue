@@ -9,13 +9,11 @@
       :labelFloat="true",
       v-model="stuid",
       @keyup.enter.native="login")
-    br
     mu-text-field(
       label="密码",
       hintText="请输入密码",
       type="password",
       :labelFloat="true",
-      :fullWidth="true",
       autocomplet="off",
       v-model="pwd",
       @keyup.enter.native="login")
@@ -45,6 +43,9 @@ export default {
   activated() {
     this.createBg();
   },
+  deactivated() {
+    this.materialBg.destroy();
+  },
   methods: {
     ...mapActions([
       'showSnackbar',
@@ -66,19 +67,14 @@ export default {
       this.loading = false;
       if (!content) return;
       const { user, token } = content;
-      if (user.type <= 2) {
+      if (user.type < 2) {
         this.showSnackbar('限制访问（内测中）');
         return;
       }
-      if (user.type <= 9) {
-        this.showSnackbar('管理员可用');
-        return;
-      }
-      this.materialBg.destroy();
       this.$store.commit('USER', user);
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      this.$router.push({ path: '/' });
+      this.$router.replace('/forum');
     },
     createBg() {
       this.materialBg = new MaterialImage({

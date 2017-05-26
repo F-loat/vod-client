@@ -13,6 +13,7 @@
 </template>
 
 <script>
+import querystring from 'query-string';
 import { mapState, mapActions } from 'vuex';
 import { _user } from '@/api';
 import TopBar from 'components/app/top-bar';
@@ -41,9 +42,18 @@ export default {
     },
   },
   mounted() {
+    const route = querystring.parse(location.search);
     const user = JSON.parse(localStorage.getItem('user'));
+    const ua = navigator.userAgent.toLowerCase();
+    const isWeixin = ua.indexOf('micromessenger') !== -1;
     if (user) this.$store.commit('USER', user);
-    this.getUser();
+    if (route && route.code) {
+      this.loginByCode(route.code);
+    } else if (localStorage.token) {
+      this.getUser();
+    } else if (isWeixin) {
+      this.getWXOauthUrl();
+    }
     this.getTypes();
     window.addEventListener('resize', () => this.$store.commit('WINDOW'));
   },
@@ -51,6 +61,15 @@ export default {
     ...mapActions([
       'getTypes',
     ]),
+    async loginByCode(code) {
+      const content = await _user.wxoauth({ code });
+      if (!content) return;
+      const { user, token } = content;
+      this.$store.commit('USER', user);
+      if (token) localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      this.$router.replace('/forum');
+    },
     async getUser() {
       const content = await _user.get();
       if (!content) return;
@@ -58,6 +77,11 @@ export default {
       this.$store.commit('USER', user);
       if (token) localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+    },
+    async getWXOauthUrl() {
+      const content = await _user.wxoauthurl();
+      if (!content) return;
+      location.href = content.authurl;
     },
   },
 };

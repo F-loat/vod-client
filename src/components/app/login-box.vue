@@ -1,6 +1,6 @@
 <template lang="pug">
 mu-dialog(:open="show", :title="title", @close="handleClose")
-  template(v-if="user.stuid")
+  template(v-if="user._id")
     mu-flat-button(slot="actions", primary, @click="logout", label="注销")
     mu-flat-button(slot="actions", primary, @click="handleClose", label="取消")
   template(v-else)
@@ -40,7 +40,7 @@ export default {
       'user',
     ]),
     title() {
-      return this.user.stuid ? '确认注销？' : '用户登录';
+      return this.user._id ? '确认注销？' : '用户登录';
     },
   },
   methods: {
@@ -76,8 +76,10 @@ export default {
     async logout() {
       const content = await _user.logout();
       if (!content) return;
-      localStorage.removeItem('token');
       this.showSnackbar('注销成功');
+      this.$store.commit('USER', {});
+      this.$store.commit('LOGINBOX', false);
+      localStorage.removeItem('token');
     },
     handleClose() {
       this.$store.commit('LOGINBOX', false);
