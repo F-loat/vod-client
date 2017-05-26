@@ -1,15 +1,31 @@
 <template lang="pug">
 #forum
-  mu-list
+  mu-refresh-control(
+    :refreshing="progress.show",
+    :trigger="$el",
+    @refresh="getTopics(true)")
+  .no-data(v-if="!topics.length")
+    mu-icon(
+      slot="left",
+      value="warning")
+    span 没有相关内容
+  mu-list.list(v-else)
     mu-list-item(
       :title="topic.title",
       v-for="topic of topics",
       :key="topic._id",
       @click="$router.push(`/forum/${topic._id}`)")
       | 创建于：{{dateFormat(topic.createdAt)}}
-      mu-avatar(src="/static/img/youngon.gif", slot="leftAvatar")
-      span(slot="describe") {{topic.author.stuid}}
+      mu-avatar(
+        :src="topic.author && topic.author.avatar ? `/uploads/${topic.author.avatar}` : '/static/img/youngon.gif'",
+        slot="leftAvatar")
+      span(slot="describe", v-if="topic.author")
+        | {{topic.author.nickname || topic.author.stuid}}
       //- span(slot="after") (10/20)
+  mu-infinite-scroll(
+    :scroller="$el",
+    :loading="progress.show",
+    @load="getTopics")
 
     //- 新增界面
     mu-dialog.new-type(
@@ -53,12 +69,18 @@ export default {
         title: '',
         content: '',
       },
+      page: {
+        limit: 10,
+        current: 0,
+        total: 1,
+      },
     };
   },
   computed: {
     ...mapState([
       'user',
       'screen',
+      'progress',
     ]),
   },
   mounted() {
@@ -67,10 +89,27 @@ export default {
   methods: {
     ...mapActions([
     ]),
-    async getTopics() {
-      const content = await _topic.list();
+    async getTopics(init) {
+      if (init) {
+        this.page.current = 1;
+      } else {
+        this.page.current += 1;
+      }
+      if (this.page.current > this.page.total) return;
+      const limit = this.page.limit;
+      this.$store.commit('PROGRESS', true);
+      const content = await _topic.list({
+        limit,
+        page: this.page.current,
+      });
+      this.$store.commit('PROGRESS', false);
       if (!content) return;
-      this.topics = content.topics;
+      if (init) {
+        this.topics = content.topics;
+      } else {
+        this.topics = this.topics.concat(content.topics);
+      }
+      this.page.total = Math.ceil(content.totalCount / limit);
     },
     async sendTopic() {
       if (!this.user._id) {
@@ -97,6 +136,11 @@ export default {
 </script>
 
 <style lang="stylus">
+#forum
+  position relative
+  height 100%
+  overflow auto
+
 .add-topic
   position fixed
   bottom 20px

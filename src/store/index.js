@@ -18,6 +18,9 @@ const store = new Vuex.Store({
       message: '',
       timer: null,
     },
+    progress: {
+      show: false,
+    },
   },
   mutations: {
     /* eslint no-param-reassign: ["error", { "props": false }] */
@@ -36,6 +39,9 @@ const store = new Vuex.Store({
     },
     SNACKBAR(state, snackbar) {
       state.snackbar = snackbar;
+    },
+    PROGRESS(state, flag) {
+      state.progress.show = flag;
     },
   },
   actions: {
