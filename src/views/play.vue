@@ -27,7 +27,7 @@
           :key="episode._id",
           :label="String(index + 1)",
           @click="switchEpisodes(index)")
-  .comment-area
+  .comment-area(v-if="episodes.length")
     .comment-push
       mu-text-field(
         hintText="文明评论",
@@ -199,17 +199,17 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+#play
+  padding-top 64px
+
 @media (max-width: 480px)
   #play
-    padding-top 56px
+    padding-top 0
   .play-area
     position fixed
     top 0
   .side
     margin-top 56.25%
-
-#play
-  padding-top 64px
 
 .play-area
   z-index 200

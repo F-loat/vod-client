@@ -56,7 +56,9 @@ export default {
       'showSnackbar',
     ]),
     async getTopic() {
-      const topic = await _topic.get(this.$route.params.id);
+      const topic = await _topic.get({
+        id: this.$route.params.id,
+      });
       if (!topic) return;
       this.topic = topic;
     },
