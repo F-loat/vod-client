@@ -29,14 +29,14 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/doubanio': {
-        target: 'https://img0.doubanio.com',
+        target: 'http://img0.doubanio.com',
         changeOrigin: true,
         pathRewrite: {
           '^/doubanio': ''
         }
       },
       '/douban': {
-        target: 'https://api.douban.com/v2/movie',
+        target: 'http://api.douban.com/v2/movie',
         changeOrigin: true,
         pathRewrite: {
           '^/douban': ''
@@ -47,7 +47,7 @@ module.exports = {
         changeOrigin: true
       },
       '/uploads': {
-        target: 'https://vod.youngon.com.cn',
+        target: 'http://vod.youngon.com.cn',
         changeOrigin: true
       }
     },

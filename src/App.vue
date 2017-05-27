@@ -31,7 +31,7 @@ export default {
       'getTypes',
     ]),
     getUser() {
-      const user = JSON.parse(sessionStorage.getItem('user'));
+      const user = JSON.parse(sessionStorage.user);
       if (!user) return;
       this.$store.commit('USER', user);
       if (user.theme && user.theme.showBg) this.createBg();

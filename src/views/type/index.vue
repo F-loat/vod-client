@@ -4,41 +4,41 @@
     :refreshing="progress.show",
     :trigger="$el",
     @refresh="getTypes")
+  .action-buttons
+    mu-dropDown-menu(
+      :value="type",
+      :autoWidth="true",
+      :anchorOrigin="{ vertical: 'bottom', horizontal: 'left' }",
+      @change="handleTypeChange")
+      mu-menu-item(value="video", title="视频")
+      mu-menu-item(value="topic", title="帖子")
+    mu-flat-button(label="编辑", @click="handleEdit")
+    mu-flat-button(label="删除", @click="delConfirmVisible = true")
   .no-data(v-if="!currentTypes.length")
     mu-icon(
       slot="left",
       value="warning")
     span 没有相关内容
-  template(v-else)
-    .action-buttons
-      mu-dropDown-menu(
-        :value="type",
-        :autoWidth="true",
-        :anchorOrigin="{ vertical: 'bottom', horizontal: 'left' }",
-        @change="handleTypeChange")
-        mu-menu-item(value="video", title="视频")
-        mu-menu-item(value="topic", title="帖子")
-      mu-flat-button(label="编辑", @click="handleEdit")
-      mu-flat-button(label="删除", @click="delConfirmVisible = true")
-    mu-table(
-      :fixedHeader="true",
-      :multiSelectable="true",
-      :enableSelectAll="true",
-      @rowSelection="handleSelete")
-      mu-thead
-        mu-tr
-          mu-th 名称
-          mu-th 排序值
-          mu-th 创建时间
-          mu-th 创建人
-      mu-tbody
-        mu-tr(
-          v-for="type of currentTypes",
-          :key="type._id")
-          mu-td {{type.name}}
-          mu-td {{type.sort}}
-          mu-td {{dateFormat(type.createdAt)}}
-          mu-td {{type.creater.nickname || type.creater.stuid}}
+  mu-table(
+    v-else,
+    :fixedHeader="true",
+    :multiSelectable="true",
+    :enableSelectAll="true",
+    @rowSelection="handleSelete")
+    mu-thead
+      mu-tr
+        mu-th 名称
+        mu-th 排序值
+        mu-th 创建时间
+        mu-th 创建人
+    mu-tbody
+      mu-tr(
+        v-for="type of currentTypes",
+        :key="type._id")
+        mu-td {{type.name}}
+        mu-td {{type.sort}}
+        mu-td {{dateFormat(type.createdAt)}}
+        mu-td {{type.creater.nickname || type.creater.stuid}}
 
   //- 新增界面
   mu-dialog.new-type(
@@ -108,7 +108,7 @@ export default {
   name: 'type-manage',
   data() {
     return {
-      type: 'video',
+      type: 'topic',
       newFormVisible: false,
       newForm: {
         name: '',
@@ -138,6 +138,9 @@ export default {
       if (this.type === 'video') return this.videoTypes;
       return this.topicTypes;
     },
+  },
+  mounted() {
+    this.type = 'video';
   },
   methods: {
     ...mapActions([

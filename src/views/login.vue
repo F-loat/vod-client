@@ -9,7 +9,6 @@
       :labelFloat="true",
       v-model="stuid",
       @keyup.enter.native="login")
-    br
     mu-text-field(
       label="密码",
       hintText="请输入密码",

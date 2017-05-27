@@ -56,7 +56,9 @@ export default {
   methods: {
     async getEpisodes() {
       this.$store.commit('PROGRESS', true);
-      this.episodes = await _episode.list({ state: [0, 1, -1] });
+      this.episodes = await _episode.list({
+        state: JSON.stringify([0, 1, -1]),
+      });
       if (this.episodes) this.$store.dispatch('showPopup', '更新成功');
       this.$store.commit('PROGRESS', false);
     },

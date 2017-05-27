@@ -46,7 +46,7 @@
       v-model="editForm.type",
       :labelFloat="true")
       mu-menu-item(:value="0", title="普通用户")
-      mu-menu-item(:value="3", title="内测用户")
+      mu-menu-item(:value="2", title="内测用户")
       mu-menu-item(:value="10", title="管理员")
     mu-flat-button(primary, label="保存", @click="modifyUser", slot="actions")
     mu-flat-button(primary, label="取消", @click="editFormVisible = false", slot="actions")
@@ -124,7 +124,7 @@ export default {
       if (!result) return;
       this.users = this.users.filter(user =>
         !selectedUserIds.includes(user._id));
-      this.$store.dispatch('showPopup', '删除成功');
+      this.$store.dispatch('showPopup', '禁用成功');
     },
     async modifyUser() {
       this.editFormVisible = false;

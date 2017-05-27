@@ -73,9 +73,14 @@ const _type = {
   list: params => http.get('/type/list', { params }),
 };
 
+const _log = {
+  list: params => http.get('/log/list', { params }),
+};
+
 export {
   _video,
   _episode,
   _user,
   _type,
+  _log,
 };

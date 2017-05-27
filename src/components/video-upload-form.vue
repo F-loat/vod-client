@@ -175,7 +175,7 @@ export default {
       });
       this.$store.commit('PROGRESS', false);
       if (!info) return;
-      const reg = /(^http:\/\/(.*)\.doubanio.com)/;
+      const reg = /(^https:\/\/(.*)\.doubanio.com)/;
       const imguri = info.images.large.replace(reg, '/doubanio');
       this.choosePoster(imguri);
       const form = this.form;
