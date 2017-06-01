@@ -29,8 +29,8 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/request': {
-        // target: 'https://vod.youngon.com.cn',
-        target: 'http://127.0.0.1:7517',
+        target: 'https://vod.youngon.com.cn',
+        // target: 'http://127.0.0.1:7517',
         changeOrigin: true
       },
       '/uploads': {

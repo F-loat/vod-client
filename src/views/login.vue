@@ -3,8 +3,8 @@
   mu-paper.login-form(ref="form")
     .title 用户登录
     mu-text-field(
-      label="账号",
-      hintText="请输入账号",
+      label="学号",
+      hintText="请输入学号",
       :fullWidth="true",
       :labelFloat="true",
       v-model="stuid",

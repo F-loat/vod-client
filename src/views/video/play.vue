@@ -1,17 +1,18 @@
 <template lang="pug">
 #play
-  top-bar(:show="screen.width > 480")
-  mu-row
-    mu-col.play-area(width="100", tablet="70", desktop="70")
+  mu-paper
+    .play-area
       .play-holder(v-show="!ready")
       .dplayer(v-show="ready", ref="player")
-    mu-col.side(width="100", tablet="30", desktop="30")
-      mu-tabs(:value="activeTab", @change="handleTabChange")
+    .side
+      mu-tabs(
+        :value="activeTab",
+        @change="handleTabChange",
+        v-if="episodes.length > 1")
         mu-tab(value="info", title="介绍")
         mu-tab(
           value="episodes",
-          title="选集",
-          v-if="episodes.length > 1")
+          title="选集")
       .side-content(v-if="activeTab === 'info'")
         h2.video-title {{video.title}}
         p.video-des 国家：{{String(video.countries || '').replace(',', '/')}}
@@ -27,35 +28,34 @@
           :key="episode._id",
           :label="String(index + 1)",
           @click="switchEpisodes(index)")
-  .comment-area(v-if="episodes.length")
-    .comment-push
-      mu-text-field(
-        hintText="文明评论",
-        :multiLine="true",
-        :fullWidth="true",
-        :rows="3",
-        :rowsMax="6",
-        v-model="comment")
-      mu-raised-button(
-        label="评论",
-        primary,
-        @click="sendComment")
-    mu-list.comment-list
-      mu-list-item(
-        :title="String(comment.commenter.stuid)",
-        v-for="comment in comments",
-        :key="comment._id")
-        mu-avatar(src="/static/img/youngon.gif", slot="leftAvatar")
-        span(slot="describe")
-          span(style="color: rgba(0, 0, 0, .87)")
-            | {{comment.content}}
-        mu-icon(value="chat_bubble", slot="right")
+    .comment-area(v-if="episodes.length")
+      .comment-push
+        mu-text-field(
+          hintText="文明评论",
+          :multiLine="true",
+          :fullWidth="true",
+          :rows="3",
+          :rowsMax="6",
+          v-model="comment")
+        mu-raised-button(
+          label="评论",
+          primary,
+          @click="sendComment")
+      mu-list.comment-list
+        mu-list-item(
+          :title="String(comment.commenter.stuid)",
+          v-for="comment in comments",
+          :key="comment._id")
+          mu-avatar(src="/static/img/youngon.gif", slot="leftAvatar")
+          span(slot="describe")
+            span(style="color: rgba(0, 0, 0, .87)")
+              | {{comment.content}}
+          mu-icon(value="chat_bubble", slot="right")
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex';
 import { _video, _episode, _comment } from '@/api';
-import TopBar from 'components/app/top-bar';
 import DPlayer from 'dplayer';
 import Hls from 'hls.js';
 
@@ -63,9 +63,6 @@ window.Hls = Hls;
 
 export default {
   name: 'play',
-  components: {
-    TopBar,
-  },
   data() {
     return {
       ready: false,
@@ -199,9 +196,6 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-#play
-  padding-top 64px
-
 @media (max-width: 480px)
   #play
     padding-top 0
@@ -213,6 +207,7 @@ export default {
 
 .play-area
   z-index 200
+  width 100%
 
 .play-holder
   width 100%
@@ -227,7 +222,7 @@ export default {
 
 .side-content
   overflow auto
-  padding 10px
+  padding 1pc
   &::-webkit-scrollbar
     display none !important
     width 0 !important
@@ -251,9 +246,12 @@ export default {
   background-color #ff5252
 
 .comment-area
+  padding 0 1pc
   margin-top 20px
 
+.comment-list
+  padding 1pc 0
+
 .comment-push
-  padding 10px
   text-align right
 </style>

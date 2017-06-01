@@ -1,11 +1,18 @@
 <template lang="pug">
 #index
-  swiper(:options="swiperOption", ref="banner")
-    swiper-slide.slide-item(
-      :style="{ height: `${slideHeight}px`, backgroundImage: `url(${banner})` }",
-      v-for="(banner, index) of banners",
-      :key="index")
-    .swiper-pagination(slot="pagination")
+  mu-row(gutter)
+    mu-col(width="100", desktop="70")
+      mu-paper.carousel-wrap
+        flickity(ref="flickity", :options="flickityOptions")
+          .carousel-cell(
+            v-for="banner of banners",
+            :style="{ backgroundImage: `url(${banner})` }")
+        .carousel-titles
+          .carousel-title 再见，天商
+    mu-col(width="100", desktop="30")
+      mu-paper.carousel-des
+        mu-float-button.search-button(icon="search")
+        .carousel-des-content 这四年 我不悔梦无归 时光倒流 故事倒叙 也不肯重来 我只恨时光太匆匆 好像刚刚有心 为你我的故事写下三两笔 下一页 已然是全书 终 我的四年清梦 我的客栈河涧 你我既在山前相见 山后必定重逢 只怕往后山远水远路迢迢 只愿少年你少忧多欢喜 从此望君安
   mu-content-block.main-list-wrap
     mu-grid-list(
       :cellHeight="cellHeight",
@@ -31,29 +38,30 @@
 </template>
 
 <script>
+import Flickity from 'vue-flickity';
 import { _video } from '@/api';
 import { mapState, mapActions } from 'vuex';
 
 export default {
   name: 'index',
+  components: {
+    Flickity,
+  },
   data() {
     return {
-      listWidth: 0,
-      swiperOption: {
-        autoplay: 5000,
-        loop: true,
-        pagination: '.swiper-pagination',
-        paginationClickable: true,
-        effect: 'coverflow',
-        centeredSlides: true,
-        mousewheelControl: true,
-        autoplayDisableOnInteraction: false,
+      flickityOptions: {
+        initialIndex: 0,
+        prevNextButtons: false,
+        pageDots: false,
+        wrapAround: true,
       },
+      listWidth: 0,
       lists: [],
       banners: [
-        'https://vod.youngon.com.cn/1.jpg',
-        'https://vod.youngon.com.cn/2.jpg',
-        'https://vod.youngon.com.cn/3.jpg',
+        '//vod.youngon.com.cn/static/1.jpg',
+        '//vod.youngon.com.cn/static/2.jpg',
+        '//vod.youngon.com.cn/static/3.jpg',
+        '//vod.youngon.com.cn/static/4.jpg',
       ],
     };
   },
@@ -71,11 +79,6 @@ export default {
     cellHeight() {
       return (this.listWidth * 1.4) / this.cols;
     },
-    slideHeight() {
-      if (this.screen.width > 993) return this.screen.width * 0.4 * 0.56;
-      if (this.screen.width > 480) return this.screen.width * 0.28;
-      return this.screen.width * 0.56;
-    },
   },
   mounted() {
     this.$nextTick(() => {
@@ -90,20 +93,11 @@ export default {
     ]),
     init() {
       this.listWidth = this.$refs.list.$el.clientWidth;
-      this.swiperAdjust();
     },
     async getVideo() {
       const content = await _video.typed();
       if (!content) return;
       this.lists = content;
-    },
-    swiperAdjust() {
-      const swiper = this.swiper;
-      swiper.params.slidesPerView = this.screen.width > 480 ? 2 : 1;
-      swiper.reLoop();
-      if (this.screen.width > 480) {
-        swiper.slideTo(swiper.activeIndex + 1, 0);
-      }
     },
   },
   watch: {
@@ -121,29 +115,51 @@ export default {
 </style>
 
 <style lang="stylus" scoped>
-.slide-item
-  background-color #eee
+.carousel-wrap
+  width 100%
+  position relative
+  overflow hidden
+.carousel-cell
+  width 100%
+  height 340px
   background-size cover
-  background-position center center
-  background-repeat no-repeat
-  a
-    display  block
-    height 100%
+  @media (max-width: 480px)
+    height 0
+    padding-bottom 56.25%
+.carousel-titles
+  height 64px
+  padding 16px
+  display flex
+  align-items center
+  @media (max-width: 480px)
+    display none
+
+.carousel-des
+  display flex
+  justify-content center
+  align-items center
+  position relative
+  @media (min-width: 480px)
+    height 404px
+.carousel-des-content
+  padding 1pc
+  line-height 1.8
+  text-indent 2em
+
+.search-button
+  position absolute
+  top -28px
+  right 28px
 
 .main-list-wrap
-  @media (max-width: 1367px) and (min-width: 480px)
-    padding-left 5%
-    padding-right 5%
+  @media (min-width: 480px)
+    padding 1pc 0
 
 .main-list-item
   height 100%
   background-size cover
   background-position center center
   background-repeat no-repeat
-
-@media (min-width: 993px)
-  .swiper-container
-    margin-top 10px
 
 .more
   color #aaa

@@ -1,16 +1,18 @@
 <template lang="pug">
 #list
-  .tabulation
-    mu-grid-list(:cellHeight="cellHeight", :cols="cols", :padding="12" ref="list")
-      mu-grid-tile(:rows="1", :cols="1", v-for="(video, index) of videos", :key="index")
-        router-link(:to="`/play/${video._id}/1`")
-          .main-list-item(:style="{ backgroundImage: `url(/uploads/${video.posterPath})` }")
-        span(slot="title") {{video.title}}
+  mu-paper
+    .pic {{type && type.name}}
+    .tabulation
+      mu-grid-list(:cellHeight="cellHeight", :cols="cols", :padding="12" ref="list")
+        mu-grid-tile(:rows="1", :cols="1", v-for="(video, index) of videos", :key="index")
+          router-link(:to="`/play/${video._id}/1`")
+            .main-list-item(:style="{ backgroundImage: `url(/uploads/${video.posterPath})` }")
+          span(slot="title") {{video.title}}
 </template>
 
 <script>
 import { _video } from '@/api';
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapGetters, mapActions } from 'vuex';
 
 export default {
   name: 'list',
@@ -24,12 +26,16 @@ export default {
     return {
       listWidth: 0,
       videos: [],
+      type: {},
     };
   },
   computed: {
     ...mapState([
       'user',
       'screen',
+    ]),
+    ...mapGetters([
+      'videoTypes',
     ]),
     cols() {
       return Math.round(this.listWidth / 160);
@@ -45,11 +51,11 @@ export default {
       this.listWidth = this.$refs.list.$el.clientWidth;
     },
     async getVideos() {
-      const content = await _video.list({
-        type: this.$route.params.type,
-      });
+      const typeId = this.$route.params.type;
+      const content = await _video.list({ type: typeId });
       if (!content) return;
       this.videos = content.videos;
+      this.type = this.videoTypes.find(type => type._id === typeId);
     },
   },
   watch: {
@@ -61,6 +67,16 @@ export default {
 </script>
 
 <style lang="stylus">
+.pic
+  height 240px
+  background-image url('~assets/img/bg3.jpg')
+  background-size cover
+  background-position center center
+  font-size 24px
+  display flex
+  align-items flex-end
+  padding 1pc 20px
+
 .main-list-item
   height 100%
   background-size cover
@@ -69,6 +85,7 @@ export default {
 
 .tabulation
   padding 16px
+  min-height 100%
 
 .tabulation-item
   height 100%

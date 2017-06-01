@@ -1,9 +1,10 @@
 <template lang="pug">
 #app
-  top-bar(:show="showTitle")
+  //- top-bar(:show="showTitle")
+  main-menu
   keep-alive
-    router-view.main-body(:class="{ 'main-no-top': !showTitle, 'main-no-bottom': !showBottom }")
-  bottom-nav(:show="showBottom")
+    router-view.main-body
+  copyright
   login-box(:show="showLoginBox")
   mu-snackbar(
     v-if="snackbar.show",
@@ -16,16 +17,16 @@
 import querystring from 'query-string';
 import { mapState, mapActions } from 'vuex';
 import { _user } from '@/api';
-import TopBar from 'components/app/top-bar';
-import BottomNav from 'components/app/bottom-nav';
 import LoginBox from 'components/app/login-box';
+import MainMenu from 'components/app/main-menu';
+import Copyright from 'components/app/copyright';
 
 export default {
   name: 'base',
   components: {
-    TopBar,
-    BottomNav,
     LoginBox,
+    MainMenu,
+    Copyright,
   },
   computed: {
     ...mapState([
@@ -34,9 +35,6 @@ export default {
       'showLoginBox',
       'snackbar',
     ]),
-    showTitle() {
-      return this.$route.meta.showTitle;
-    },
     showBottom() {
       return this.$route.meta.showBottom;
     },
@@ -97,23 +95,13 @@ easeInOutFunction = cubic-bezier(0.445, 0.05, 0.55, 0.95)
   height 100%
 
 .main-body
+  width 100%
+  min-height 100%
+  padding-bottom 1pc
   @media (min-width: 480px)
-    padding-top 64px
-    min-height 90vh
-  @media (max-width: 480px)
-    padding-top 56px
-    padding-bottom 56px
-    overflow auto
-    overflow-x hidden
-    overflow-y scroll
-  @media (min-width: 1367px)
-    padding-left 10%
-    padding-right 10%
+    padding-top 165px
+    padding-bottom 80px
+    max-width 900px
+    box-sizing border-box
     margin 0 auto
-
-.main-no-top
-  padding-top 0
-
-.main-no-bottom
-  padding-bottom 0
 </style>

@@ -1,31 +1,30 @@
 <template lang="pug">
 #forum
-  mu-refresh-control(
-    :refreshing="progress.show",
-    :trigger="$el",
-    @refresh="getTopics(true)")
   .no-data(v-if="!topics.length")
     mu-icon(
       slot="left",
       value="warning")
     span 没有相关内容
-  mu-list.list(v-else)
-    mu-list-item(
-      :title="topic.title",
-      v-for="topic of topics",
-      :key="topic._id",
-      @click="$router.push(`/forum/${topic._id}`)")
-      | 创建于：{{dateFormat(topic.createdAt)}}
-      mu-avatar(
-        :src="topic.author && topic.author.avatar ? `/uploads/${topic.author.avatar}` : '/static/img/youngon.gif'",
-        slot="leftAvatar")
-      span(slot="describe", v-if="topic.author")
-        | {{topic.author.nickname || topic.author.stuid}}
-      //- span(slot="after") (10/20)
-  mu-infinite-scroll(
-    :scroller="$el",
-    :loading="progress.show",
-    @load="getTopics")
+  .forum-list(v-else)
+    mu-paper.list
+      .pic 论坛
+      .list-item(
+        v-for="topic of topics",
+        :key="topic._id",
+        @click="$router.push(`/forum/${topic._id}`)")
+        .topic
+          .topic-title {{topic.title}}
+          .topic-content {{topic.content}}
+        .author
+          mu-avatar(
+            :src="topic.author && topic.author.avatar ? `/uploads/${topic.author.avatar}` : '/static/img/youngon.gif'")
+          .author-info
+            strong {{topic.author.nickname || topic.author.stuid}}
+            span {{dateFormat(topic.createdAt)}}
+    mu-infinite-scroll(
+      :scroller="$el",
+      :loading="progress.show",
+      @load="getTopics")
 
     //- 新增界面
     mu-dialog.new-type(
@@ -135,16 +134,48 @@ export default {
 };
 </script>
 
-<style lang="stylus">
+<style lang="stylus" scoped>
 #forum
   position relative
-  height 100%
-  overflow auto
+  @media (max-width: 480px)
+    overflow auto
+
+.pic
+  height 240px
+  background-image url('~assets/img/bg1.jpg')
+  background-size cover
+  background-position center center
+  font-size 24px
+  display flex
+  align-items flex-end
+  padding 1pc 20px
+
+.list-item
+  cursor pointer
+  border-top 1px solid #eee
+  @media (min-width: 480px)
+    margin-bottom 1pc
+
+.topic
+  padding 1pc 20px
+.topic-title
+  font-size 18px
+
+.author
+  padding 1pc
+  display flex
+  align-items center
+.author-info
+  display flex
+  flex-direction column
+  font-size 13px
+  color #757575
+  margin-left 1pc
+  strong
+    font-weight 700
 
 .add-topic
   position fixed
   bottom 20px
   right 20px
-  @media (max-width: 480px)
-    bottom 76px
 </style>
