@@ -1,5 +1,9 @@
 <template lang="pug">
 #forum
+  mu-refresh-control(
+    :refreshing="refreshing",
+    :trigger="scroller",
+    @refresh="getTopics(true)")
   .no-data(v-if="!topics.length")
     mu-icon(
       slot="left",
@@ -22,8 +26,8 @@
             strong {{topic.author.nickname || topic.author.stuid}}
             span {{dateFormat(topic.createdAt)}}
     mu-infinite-scroll(
-      :scroller="$el",
-      :loading="progress.show",
+      :scroller="scroller",
+      :loading="loading",
       @load="getTopics")
 
     //- 新增界面
@@ -73,6 +77,9 @@ export default {
         current: 0,
         total: 1,
       },
+      loading: false,
+      refreshing: false,
+      scroller: window,
     };
   },
   computed: {
@@ -91,24 +98,31 @@ export default {
     async getTopics(init) {
       if (init) {
         this.page.current = 1;
+        if (this.page.current > this.page.total) return;
+        const limit = this.page.limit;
+        this.refreshing = true;
+        const content = await _topic.list({
+          limit,
+          page: this.page.current,
+        });
+        this.refreshing = false;
+        if (!content) return;
+        this.topics = content.topics;
+        this.page.total = Math.ceil(content.totalCount / limit);
       } else {
         this.page.current += 1;
-      }
-      if (this.page.current > this.page.total) return;
-      const limit = this.page.limit;
-      this.$store.commit('PROGRESS', true);
-      const content = await _topic.list({
-        limit,
-        page: this.page.current,
-      });
-      this.$store.commit('PROGRESS', false);
-      if (!content) return;
-      if (init) {
-        this.topics = content.topics;
-      } else {
+        if (this.page.current > this.page.total) return;
+        const limit = this.page.limit;
+        this.loading = true;
+        const content = await _topic.list({
+          limit,
+          page: this.page.current,
+        });
+        this.loading = false;
+        if (!content) return;
         this.topics = this.topics.concat(content.topics);
+        this.page.total = Math.ceil(content.totalCount / limit);
       }
-      this.page.total = Math.ceil(content.totalCount / limit);
     },
     async sendTopic() {
       if (!this.user._id) {
@@ -135,11 +149,6 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-#forum
-  position relative
-  @media (max-width: 480px)
-    overflow auto
-
 .pic
   height 240px
   background-image url('~assets/img/bg1.jpg')

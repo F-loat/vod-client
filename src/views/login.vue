@@ -1,5 +1,5 @@
 <template lang="pug">
-.page.login(@click.self="materialBg.protract")
+.login(@click.self="materialBg.protract")
   mu-paper.login-form(ref="form")
     .title 用户登录
     mu-text-field(
@@ -86,12 +86,14 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-.page
+.login
   width 100%
-  height 100%
   display flex
   justify-content center
   align-items center
+  @media (max-width: 480px)
+    margin-bottom -1pc
+    box-sizing content-box
 
 .login-form
   width 440px
@@ -104,7 +106,7 @@ export default {
   flex-direction column
   @media (max-width: 480px)
     width 100%
-    height 100%
+    height 100vh
     margin 0
 
 .title

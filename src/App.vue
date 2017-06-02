@@ -91,12 +91,9 @@ export default {
 easeOutFunction = cubic-bezier(0.23, 1, 0.32, 1)
 easeInOutFunction = cubic-bezier(0.445, 0.05, 0.55, 0.95)
 
-#app
-  height 100%
-
 .main-body
   width 100%
-  min-height 100%
+  min-height 100vh
   padding-bottom 1pc
   @media (min-width: 480px)
     padding-top 165px
