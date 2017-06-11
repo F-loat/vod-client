@@ -9,6 +9,7 @@ import userList from '@/views/user/list';
 import videoList from '@/views/video/list';
 import videoUpload from '@/views/video/upload';
 import videoTranscode from '@/views/video/transcode';
+import bannerList from '@/views/banner/list';
 import forumTopic from '@/views/forum/topic';
 import typeManage from '@/views/type';
 
@@ -45,6 +46,18 @@ const routes = [
       { path: '/video/upload', component: videoUpload, meta: { title: '视频上传' } },
       { path: '/video/list', component: videoList, meta: { title: '视频列表' } },
       { path: '/video/transcode', component: videoTranscode, meta: { title: '转码队列' } },
+    ],
+  },
+  {
+    path: '/banner',
+    component: layout,
+    meta: {
+      title: '轮换图管理',
+      icon: 'movie',
+      leaf: true,
+    },
+    children: [
+      { path: '/banner', component: bannerList, meta: { title: '轮换图列表' } },
     ],
   },
   {

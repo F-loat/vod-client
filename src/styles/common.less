@@ -23,3 +23,11 @@
   justify-content: center;
   align-items: center;
 }
+
+.fade-down-enter-active, .fade-down-leave-active {
+  transition: all .5s ease;
+}
+.fade-down-enter, .fade-down-leave-active {
+  opacity: 0;
+  transform: translate(0, 50px);
+}

@@ -30,6 +30,12 @@ http.interceptors.response.use((res) => {
   return false;
 });
 
+const _banner = {
+  post: data => http.post('/banner', data),
+  delete: params => http.delete('/banner', { params }),
+  list: params => http.get('/banner/list', { params }),
+};
+
 const _video = {
   get: async (params) => {
     try {
@@ -78,6 +84,7 @@ const _log = {
 };
 
 export {
+  _banner,
   _video,
   _episode,
   _user,

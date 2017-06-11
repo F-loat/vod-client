@@ -40,7 +40,7 @@
         :anchorOrigin="{ vertical: 'bottom', horizontal: 'left' }")
         mu-menu-item(title="设置")
         mu-menu-item(title="退出", @click="alert.open = true")
-    transition(name="fade", mode="out-in")
+    transition(name="fade-down", mode="out-in")
       keep-alive
         router-view.content
   mu-dialog(
