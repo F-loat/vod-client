@@ -30,6 +30,10 @@ http.interceptors.response.use((res) => {
   return false;
 });
 
+const _banner = {
+  list: params => http.get('/banner/list', { params }),
+};
+
 const _video = {
   get: params => http.get('/video', { params }),
   list: params => http.get('/video/list', { params }),
@@ -65,6 +69,7 @@ const _comment = {
 };
 
 export {
+  _banner,
   _video,
   _episode,
   _user,

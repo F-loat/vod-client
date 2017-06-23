@@ -1,18 +1,31 @@
 <template lang="pug">
 #index
   mu-row(gutter)
-    mu-col(width="100", desktop="70")
+    mu-col(width="100", tablet="70", desktop="70")
       mu-paper.carousel-wrap
-        flickity(ref="flickity", :options="flickityOptions")
+        flickity(
+          ref="flickity",
+          :options="flickityOptions")
           .carousel-cell(
             v-for="banner of banners",
-            :style="{ backgroundImage: `url(${banner})` }")
-        .carousel-titles
-          .carousel-title 再见，天商
-    mu-col(width="100", desktop="30")
+            :style="{ backgroundImage: `url(/uploads/${banner.filePath})` }")
+        .carousel-titles(@click="handleBannerClick")
+          transition(name="fade", mode="out-in")
+            .carousel-title(
+              v-for="(banner, index) of banners",
+              :class="{ link: banner.href }",
+              v-if="index === selectedIndex",
+              :key="index")
+              | {{banner.title}}
+    mu-col(width="100", tablet="30", desktop="30")
       mu-paper.carousel-des
         mu-float-button.search-button(icon="search")
-        .carousel-des-content 这四年 我不悔梦无归 时光倒流 故事倒叙 也不肯重来 我只恨时光太匆匆 好像刚刚有心 为你我的故事写下三两笔 下一页 已然是全书 终 我的四年清梦 我的客栈河涧 你我既在山前相见 山后必定重逢 只怕往后山远水远路迢迢 只愿少年你少忧多欢喜 从此望君安
+        transition(name="fade-down", mode="out-in")
+          .carousel-des-content(
+            v-for="(banner, index) of banners",
+            v-if="index === selectedIndex",
+            :key="index")
+            | {{banner.summary}}
   mu-content-block.main-list-wrap
     mu-grid-list(
       :cellHeight="cellHeight",
@@ -38,8 +51,8 @@
 </template>
 
 <script>
-import Flickity from 'vue-flickity';
-import { _video } from '@/api';
+import Flickity from '@/components/video/flickity';
+import { _video, _banner } from '@/api';
 import { mapState, mapActions } from 'vuex';
 
 export default {
@@ -54,15 +67,12 @@ export default {
         prevNextButtons: false,
         pageDots: false,
         wrapAround: true,
+        // autoPlay: 5000,
       },
+      selectedIndex: 0,
       listWidth: 0,
       lists: [],
-      banners: [
-        '//vod.youngon.com.cn/static/1.jpg',
-        '//vod.youngon.com.cn/static/2.jpg',
-        '//vod.youngon.com.cn/static/3.jpg',
-        '//vod.youngon.com.cn/static/4.jpg',
-      ],
+      banners: [],
     };
   },
   computed: {
@@ -70,9 +80,6 @@ export default {
       'user',
       'screen',
     ]),
-    swiper() {
-      return this.$refs.banner.swiper;
-    },
     cols() {
       return Math.round(this.listWidth / 160);
     },
@@ -83,6 +90,7 @@ export default {
   mounted() {
     this.$nextTick(() => {
       this.getVideo();
+      this.getBanner();
     });
   },
   activated() {
@@ -93,11 +101,28 @@ export default {
     ]),
     init() {
       this.listWidth = this.$refs.list.$el.clientWidth;
+      const flickity = this.$refs.flickity;
+      flickity.rerender();
+      flickity.on('select', () => {
+        this.selectedIndex = flickity.flickity.selectedIndex;
+      });
     },
     async getVideo() {
       const content = await _video.typed();
       if (!content) return;
       this.lists = content;
+    },
+    async getBanner() {
+      const content = await _banner.list();
+      if (!content) return;
+      this.banners = content;
+      this.$nextTick(() => this.init());
+    },
+    handleBannerClick() {
+      const index = this.selectedIndex;
+      const banner = this.banners[index];
+      if (banner.type === 0) this.$router.push(banner.href);
+      if (banner.type === 1) location.href = banner.href;
     },
   },
   watch: {
@@ -132,19 +157,26 @@ export default {
   display flex
   align-items center
   @media (max-width: 480px)
-    display none
+    position absolute
+    bottom 0
+    font-size 18px
+    height 48px
+.carousel-title.link
+  cursor pointer
 
 .carousel-des
   display flex
   justify-content center
   align-items center
   position relative
+  border-top 1px solid #eee
+  border-bottom 1px solid #eee
+  min-height 160px
   @media (min-width: 480px)
     height 404px
 .carousel-des-content
   padding 1pc
   line-height 1.8
-  text-indent 2em
 
 .search-button
   position absolute

@@ -17,11 +17,13 @@ html, body
     visibility hidden
 
 .no-data
-  width 100vw
-  height 100vh
+  width 100%
+  height 100%
   display flex
   justify-content center
   align-items center
+  @media (min-width: 480px)
+    margin-top -165px
 
 .mu-drawer
   width 280px
@@ -44,3 +46,14 @@ html, body
     box-shadow none
   .mu-paper-round
    border-radius 0
+
+ .fade-enter-active, .fade-leave-active
+   transition opacity .5s
+ .fade-enter, .fade-leave-active
+   opacity 0
+
+ .fade-down-enter-active, .fade-down-leave-active
+   transition all .5s
+ .fade-down-enter, .fade-down-leave-active
+   opacity 0
+   transform translate(0, 30px)

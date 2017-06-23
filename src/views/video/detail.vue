@@ -28,7 +28,7 @@
           :key="episode._id",
           :label="String(index + 1)",
           @click="switchEpisodes(index)")
-    .comment-area(v-if="episodes.length")
+    .comment-area(v-show="episodes.length")
       .comment-push
         mu-text-field(
           hintText="文明评论",
@@ -56,8 +56,8 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import { _video, _episode, _comment } from '@/api';
-import DPlayer from 'dplayer';
 import Hls from 'hls.js';
+import DPlayer from 'dplayer';
 
 window.Hls = Hls;
 
@@ -82,14 +82,11 @@ export default {
       return this.$refs.player.dp;
     },
   },
-  activated() {
+  mounted() {
     this.$nextTick(() => {
       this.getVideo();
       this.getEpisodes();
     });
-  },
-  deactivated() {
-    this.ready = false;
   },
   methods: {
     ...mapActions([

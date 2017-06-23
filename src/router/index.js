@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 
 const index = () => import('@/views/video');
 const list = () => import('@/views/video/list');
-const play = () => import('@/views/video/play');
+const play = () => import('@/views/video/detail');
 const forum = () => import('@/views/forum');
 const topic = () => import('@/views/forum/detail');
 const login = () => import('@/views/login');
