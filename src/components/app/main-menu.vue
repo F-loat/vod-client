@@ -3,7 +3,7 @@
   mu-icon-button.menu-button(icon="menu", @click="open = true")
   mu-drawer(:open="open", :docked="false", @close="open = !open")
     .person-info
-      img.headimg(:src="user.avatar ? `/uploads/${user.avatar}` : '/static/img/youngon.gif'")
+      img.headimg(:src="user.headimgurl || (user.avatar ? `/uploads/${user.avatar}` : '/static/img/youngon.gif')")
       .nickname(@click="$store.commit('LOGINBOX', true)")
         span {{user.nickname || user.stuid || '账号登录'}}
         span(v-if="user._id") [{{typeFormat(user.type)}}]
@@ -16,21 +16,15 @@
           title="全部",
           to="/forum")
         mu-list-item(
+          v-for="type of topicTypes",
           slot="nested",
-          title="待处理",
-          to="/forum?type=0")
-        mu-list-item(
-          slot="nested",
-          title="已处理",
-          to="/forum?type=1")
-        mu-list-item(
-          slot="nested",
-          title="连载中",
-          to="/forum?type=2")
+          :key="type._id",
+          :title="type.name",
+          :to="`/forum?type=${type._id}`")
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 
 export default {
   name: 'main-menu',
@@ -43,6 +37,9 @@ export default {
     ...mapState([
       'user',
       'screen',
+    ]),
+    ...mapGetters([
+      'topicTypes',
     ]),
   },
   methods: {
@@ -63,10 +60,12 @@ export default {
 <style lang="stylus" scoped>
 .menu-button
   position absolute
-  margin-top 1pc
-  margin-left 8px
-  z-index 999
+  top 1pc
+  left 8px
+  z-index 9
   color #222
+  @media (min-width: 480px)
+    position fixed
 
 .person-info
   height 160px

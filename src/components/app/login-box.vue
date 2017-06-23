@@ -60,7 +60,7 @@ export default {
       });
       if (!content) return;
       const { user, token } = content;
-      if (user.type <= 2) {
+      if (user.type < 2) {
         this.showSnackbar('限制访问（内测中）');
         return;
       }
@@ -71,7 +71,13 @@ export default {
       this.showSnackbar('登录成功');
       this.$store.commit('USER', user);
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      const ua = navigator.userAgent.toLowerCase();
+      const isWeixin = ua.indexOf('micromessenger') !== -1;
+      if (isWeixin && !user.openid) {
+        const rst = await _user.wxoauthurl({ state: 'bind' });
+        if (!rst) return;
+        location.href = rst.authurl;
+      }
     },
     async logout() {
       const content = await _user.logout();

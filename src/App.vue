@@ -1,8 +1,7 @@
 <template lang="pug">
 #app
-  //- top-bar(:show="showTitle")
   main-menu
-  keep-alive
+  keep-alive(:exclude="exclude")
     router-view.main-body
   copyright
   login-box(:show="showLoginBox")
@@ -28,6 +27,11 @@ export default {
     MainMenu,
     Copyright,
   },
+  data() {
+    return {
+      exclude: 'play',
+    };
+  },
   computed: {
     ...mapState([
       'user',
@@ -41,12 +45,10 @@ export default {
   },
   mounted() {
     const route = querystring.parse(location.search);
-    const user = JSON.parse(localStorage.getItem('user'));
     const ua = navigator.userAgent.toLowerCase();
     const isWeixin = ua.indexOf('micromessenger') !== -1;
-    if (user) this.$store.commit('USER', user);
     if (route && route.code) {
-      this.loginByCode(route.code);
+      this.handleCode(route.code, route.state);
     } else if (localStorage.token) {
       this.getUser();
     } else if (isWeixin) {
@@ -59,14 +61,15 @@ export default {
     ...mapActions([
       'getTypes',
     ]),
-    async loginByCode(code) {
-      const content = await _user.wxoauth({ code });
+    async handleCode(code, state) {
+      let content;
+      if (state === 'info') content = await _user.wxoauth({ code });
+      if (state === 'bind') content = await _user.wxbind({ code });
       if (!content) return;
       const { user, token } = content;
       this.$store.commit('USER', user);
       if (token) localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      this.$router.replace('/forum');
+      this.$router.replace('/');
     },
     async getUser() {
       const content = await _user.get();
@@ -74,10 +77,9 @@ export default {
       const { user, token } = content;
       this.$store.commit('USER', user);
       if (token) localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
     },
     async getWXOauthUrl() {
-      const content = await _user.wxoauthurl();
+      const content = await _user.wxoauthurl({ state: 'info' });
       if (!content) return;
       location.href = content.authurl;
     },

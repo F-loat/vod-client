@@ -12,10 +12,11 @@
     mu-text-field(
       label="密码",
       hintText="请输入密码",
-      type="password",
+      :fullWidth="true",
       :labelFloat="true",
-      autocomplet="off",
       v-model="pwd",
+      type="password",
+      autocomplet="off",
       @keyup.enter.native="login")
     br
     mu-raised-button(
@@ -73,7 +74,13 @@ export default {
       }
       this.$store.commit('USER', user);
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      const ua = navigator.userAgent.toLowerCase();
+      const isWeixin = ua.indexOf('micromessenger') !== -1;
+      if (isWeixin && !user.openid) {
+        const rst = await _user.wxoauthurl({ state: 'bind' });
+        if (!rst) return;
+        location.href = rst.authurl;
+      }
       this.$router.replace('/forum');
     },
     createBg() {

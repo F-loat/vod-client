@@ -44,6 +44,7 @@ const _user = {
   get: params => http.get('/user', { params }),
   login: data => http.post('/user/login', data),
   wxoauth: data => http.post('/user/wxoauth', data),
+  wxbind: data => http.post('/user/wxbind', data),
   wxoauthurl: params => http.get('/user/wxoauth/url', { params }),
   logout: params => http.get('/user/logout', { params }),
 };
