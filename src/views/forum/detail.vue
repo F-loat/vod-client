@@ -6,11 +6,11 @@
        .topic-content {{topic.content}}
     .author
        mu-avatar(
-         :src="topic.author && topic.author.avatar ? `/uploads/${topic.author.avatar}` : '/static/img/youngon.gif'")
+         :src="topic.creater && topic.creater.avatar ? `/assets/${topic.creater.avatar}` : '/static/img/youngon.gif'")
        .author-info
-         strong(v-if="topic.author")
-           | {{topic.author.nickname || topic.author.stuid}}
-         span {{dateFormat(topic.createdAt)}}
+         strong(v-if="topic.creater")
+           | {{topic.creater.nickname}}
+         span {{topic.createdAt | dateFormat}}
     .comment-area
       .comment-push
         mu-text-field(
@@ -26,10 +26,10 @@
           @click="sendComment")
       mu-list.comment-list
         mu-list-item(
-          :title="String(comment.commenter.nickname || comment.commenter.stuid)",
+          :title="String(comment.creater.nickname)",
           v-for="comment in comments",
           :key="comment._id")
-          mu-avatar(:src="comment.commenter.avatar ? `/uploads/${comment.commenter.avatar}` : '/static/img/youngon.gif'", slot="leftAvatar")
+          mu-avatar(:src="comment.creater.avatar ? `/assets/${comment.creater.avatar}` : '/static/img/youngon.gif'", slot="leftAvatar")
           span(slot="describe")
             span(style="color: rgba(0, 0, 0, .87)")
               | {{comment.content}}
@@ -38,8 +38,8 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
-import { _topic, _comment } from '@/api';
-import dateFormat from '@/utils/date/format';
+import { date } from '@/utils';
+import * as api from '@/api';
 
 export default {
   name: 'topic',
@@ -60,22 +60,26 @@ export default {
     this.getTopic();
     this.getComments();
   },
+  filters: {
+    dateFormat: (value) => {
+      if (!value) return '';
+      return date.format(new Date(value));
+    },
+  },
   methods: {
     ...mapActions([
       'showSnackbar',
     ]),
     async getTopic() {
-      const topic = await _topic.get({
-        id: this.$route.params.id,
-      });
-      if (!topic) return;
-      this.topic = topic;
+      const data = await api.showTopic(this.$route.params.id);
+      if (!data) return;
+      this.topic = data;
     },
     async getComments() {
-      const id = this.$route.params.id;
-      const content = await _comment.list({ id });
-      if (!content) return;
-      this.comments = content;
+      const { id } = this.$route.params;
+      const data = await api.indexComment({ belong: id });
+      if (!data) return;
+      this.comments = data.comments;
     },
     async sendComment() {
       const comment = this.comment;
@@ -87,15 +91,14 @@ export default {
         this.showSnackbar('请输入评论');
         return;
       }
-      const newComment = await _comment.post({
-        id: this.$route.params.id,
+      await api.createComment({
+        belong: this.$route.params.id,
         content: this.comment,
+      }, {
+        type: 'topic',
       });
-      if (!newComment) return;
-      newComment.commenter = this.user;
-      this.comments.unshift(newComment);
+      this.getComments();
     },
-    dateFormat: date => dateFormat(new Date(date)),
   },
 };
 </script>

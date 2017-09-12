@@ -1,79 +1,44 @@
-import axios from 'axios';
-import store from '../store';
+import { request } from '@/utils';
 
-const http = axios.create({
-  baseURL: '/request',
-});
+const indexBanner = params => request.get('/banners', { params });
 
-http.interceptors.request.use((config) => {
-  const newConfig = config;
-  if (localStorage.token) {
-    newConfig.headers = { Authorization: `Bearer ${localStorage.token}` };
-  }
-  return newConfig;
-}, (err) => {
-  store.dispatch('showSnackbar', err.message);
-});
+const indexVideo = params => request.get('/videos', { params });
+const showVideo = (id, params) => request.get(`/videos/${id}`, { params });
 
-http.interceptors.response.use((res) => {
-  if (res.data.state === 1) return res.data.content;
-  const msg = res.data.msg;
-  if (msg) store.dispatch('showSnackbar', msg);
-  return false;
-}, (err) => {
-  const res = err.response;
-  if (res.status === 401 || res.status === 403) {
-    localStorage.removeItem('token');
-  }
-  const msg = res.data.msg;
-  if (msg) store.dispatch('showSnackbar', msg);
-  return false;
-});
+const indexEpisode = params => request.get('/episodes', { params });
 
-const _banner = {
-  list: params => http.get('/banner/list', { params }),
-};
+const showUser = (id, params) => request.get(`/users/${id}`, { params });
+const createUser = (data, params) => request.post('/users', data, { params });
+const updateUser = (id, data, params) => request.put(`/users/${id}`, data, { params });
+const createToken = (data, params) => request.post('/tokens', data, { params });
+const destroyToken = params => request.del('/tokens', { params });
+// const wxoauthurl = params => request.get('/user/wxoauth/url', { params });
 
-const _video = {
-  get: params => http.get('/video', { params }),
-  list: params => http.get('/video/list', { params }),
-  typed: params => http.get('/video/typed', { params }),
-};
+const indexType = params => request.get('/types', { params });
+const showType = (id, params) => request.get(`/types/${id}`, { params });
 
-const _episode = {
-  list: params => http.get('/episode/list', { params }),
-};
+const indexTopic = params => request.get('/topics', { params });
+const showTopic = (id, params) => request.get(`/topics/${id}`, { params });
+const createTopic = data => request.post('/topics', data);
 
-const _user = {
-  get: params => http.get('/user', { params }),
-  login: data => http.post('/user/login', data),
-  wxoauth: data => http.post('/user/wxoauth', data),
-  wxbind: data => http.post('/user/wxbind', data),
-  wxoauthurl: params => http.get('/user/wxoauth/url', { params }),
-  logout: params => http.get('/user/logout', { params }),
-};
-
-const _type = {
-  list: params => http.get('/type/list', { params }),
-};
-
-const _topic = {
-  get: params => http.get('/topic', { params }),
-  post: data => http.post('/topic', data),
-  list: params => http.get('/topic/list', { params }),
-};
-
-const _comment = {
-  post: data => http.post('/comment', data),
-  list: params => http.get('/comment/list', { params }),
-};
+const indexComment = params => request.get('/comments', { params });
+const createComment = (data, params) => request.post('/comments', data, { params });
 
 export {
-  _banner,
-  _video,
-  _episode,
-  _user,
-  _type,
-  _topic,
-  _comment,
+  indexBanner,
+  indexVideo,
+  showVideo,
+  indexEpisode,
+  showUser,
+  createUser,
+  createToken,
+  updateUser,
+  destroyToken,
+  indexType,
+  showType,
+  indexTopic,
+  showTopic,
+  createTopic,
+  indexComment,
+  createComment,
 };

@@ -29,11 +29,11 @@ const routes = [
     component: topic,
   },
   {
-    path: '/list/:type',
+    path: '/list/:type?',
     component: list,
   },
   {
-    path: '/play/:id/:episode',
+    path: '/play/:id/:episode?',
     component: play,
   },
   {
@@ -56,16 +56,18 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const token = localStorage.token;
-  if (token && to.path === '/login') {
-    next({ path: '/' });
-    return;
+  if (to.path === '/login') {
+    localStorage.removeItem('token');
+    if (!to.query.redirect) {
+      return next({
+        path: '/login',
+        query: {
+          redirect: from.fullPath,
+        },
+      });
+    }
   }
-  if (!token && to.path !== '/login') {
-    next({ path: '/login' });
-    return;
-  }
-  next();
+  return next();
 });
 
 export default router;

@@ -1,8 +1,8 @@
 // modified version of 'vux' tools
 
-function formatDate(originalDate, format = 'YYYY-MM-DD HH:mm:ss') {
+function format(originalDate, dateFormat = 'YYYY-MM-DD HH:mm:ss') {
   let date = originalDate;
-  let fmt = format;
+  let fmt = dateFormat;
   if (typeof date === 'string') {
     date = new Date(date.replace(/-/g, '/'));
   }
@@ -50,4 +50,6 @@ function formatDate(originalDate, format = 'YYYY-MM-DD HH:mm:ss') {
   return fmt;
 }
 
-export default formatDate;
+export default {
+  format,
+};

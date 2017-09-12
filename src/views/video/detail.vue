@@ -43,10 +43,12 @@
           @click="sendComment")
       mu-list.comment-list
         mu-list-item(
-          :title="String(comment.commenter.stuid)",
+          :title="String(comment.creater.nickname)",
           v-for="comment in comments",
           :key="comment._id")
-          mu-avatar(src="/static/img/youngon.gif", slot="leftAvatar")
+          mu-avatar(
+            :src="comment.creater.avatar ? `/assets/${comment.creater.avatar}` : '/static/img/youngon.gif'",
+            slot="leftAvatar")
           span(slot="describe")
             span(style="color: rgba(0, 0, 0, .87)")
               | {{comment.content}}
@@ -55,9 +57,9 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
-import { _video, _episode, _comment } from '@/api';
 import Hls from 'hls.js';
 import DPlayer from 'dplayer';
+import * as api from '@/api';
 
 window.Hls = Hls;
 
@@ -93,97 +95,75 @@ export default {
       'showSnackbar',
     ]),
     async getVideo() {
-      const content = await _video.get({
-        _id: this.$route.params.id,
-      });
-      if (!content) return;
-      this.video = content;
+      const data = await api.showVideo(this.$route.params.id);
+      if (!data) return;
+      this.video = data;
     },
     async getEpisodes() {
-      const content = await _episode.list({
-        videoId: this.$route.params.id,
+      const { params } = this.$route;
+      const data = await api.indexEpisode({
+        belong: params.id,
       });
-      if (!content) return;
-      this.episodes = content;
-      if (!this.episodes.length) {
+      if (!data) return;
+      if (!data.episodes.length) {
         this.showSnackbar('视频文件暂未上传');
         return;
       }
-      let episode = this.$route.params.episode - 1;
-      if (this.episodes.length <= episode) {
-        const id = this.$route.params.id;
-        this.$router.replace(`/play/${id}/1`);
-        episode = 0;
+      this.episodes = data.episodes;
+      let episodeId = params.episode;
+      if (!episodeId) {
+        episodeId = this.episodes[0]._id;
+        this.$router.replace(`/play/${params.id}/${episodeId}`);
       }
-      this.getComments();
+      const episode = this.episodes.find(item => item._id === episodeId);
       this.dplayer = new DPlayer({
         loop: false,
-        screenshot: false,
+        screenshot: true,
         theme: '#7e57c2',
-        hotkey: false,
         video: {
-          url: `/uploads/${this.episodes[episode].filePath}`,
+          url: `/assets/${episode.path}${episode.state === 2 ? '/index.m3u8' : ''}`,
           pic: '/static/img/waiting.png',
           type: 'auto',
-        },
-        danmaku: {
-          id: this.episodes[episode]._id,
-          api: '/request/danmaku',
-          token: 'youngon_vod',
-          maximum: 1000,
-          user: this.user._id || 'youngon',
         },
       });
       this.ready = true;
+      this.getComments();
     },
-    switchEpisodes(episode) {
-      const route = this.$route;
-      this.$router.replace(`/play/${route.params.id}/${episode + 1}`);
-      this.dplayer = new DPlayer({
-        loop: false,
-        screenshot: false,
-        theme: '#7e57c2',
-        hotkey: false,
-        video: {
-          url: `/uploads/${this.episodes[episode].filePath}`,
-          pic: '/static/img/waiting.png',
-          type: 'auto',
-        },
-        danmaku: {
-          id: this.episodes[episode]._id,
-          api: '/request/danmaku',
-          token: 'youngon_vod',
-          maximum: 1000,
-          user: this.user._id || 'youngon',
-        },
+    switchEpisodes(index) {
+      const { _id, path, state } = this.episodes[index];
+      this.dplayer.switchVideo({
+        url: `/assets/${path}${state === 2 ? '/index.m3u8' : ''}`,
+        pic: '/static/img/waiting.png',
+        type: 'auto',
       });
+      this.$router.replace(`/play/${this.$route.params.id}/${_id}`);
     },
     async getComments() {
-      const episodeIndex = this.$route.params.episode - 1;
-      const id = this.episodes[episodeIndex]._id;
-      const content = await _comment.list({ id });
-      if (!content) return;
-      this.comments = content;
+      const data = await api.indexComment({
+        belong: this.$route.params.episode,
+      });
+      if (!data) return;
+      this.comments = data.comments;
     },
     async sendComment() {
-      const comment = this.comment;
+      const { comment } = this;
       if (!this.user._id) {
         this.showSnackbar('登录后可评论');
+        this.$router.push('/login');
         return;
       }
       if (!comment) {
         this.showSnackbar('请输入评论');
         return;
       }
-      const episodeIndex = this.$route.params.episode - 1;
-      const id = this.episodes[episodeIndex]._id;
-      const newComment = await _comment.post({
-        id,
+      const data = await api.createComment({
+        belong: this.$route.params.episode,
         content: this.comment,
+      }, {
+        type: 'topic',
       });
-      if (!newComment) return;
-      newComment.commenter = this.user;
-      this.comments.unshift(newComment);
+      if (!data) return;
+      this.getComments();
     },
     handleTabChange(val) {
       this.activeTab = val;
@@ -193,6 +173,8 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
+@import '~dplayer/dist/DPlayer.min.css'
+
 @media (max-width: 480px)
   #play
     padding-top 0

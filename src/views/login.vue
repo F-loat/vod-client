@@ -3,24 +3,24 @@
   mu-paper.login-form(ref="form")
     .title 用户登录
     mu-text-field(
-      label="学号",
-      hintText="请输入学号",
+      label="用户名",
+      hintText="校内用户请输入学号",
       :fullWidth="true",
       :labelFloat="true",
-      v-model="stuid",
+      v-model="username",
       @keyup.enter.native="login")
     mu-text-field(
       label="密码",
-      hintText="请输入密码",
+      hintText="校内用户请输入统一登录平台密码",
       :fullWidth="true",
       :labelFloat="true",
-      v-model="pwd",
+      v-model="password",
       type="password",
       autocomplet="off",
       @keyup.enter.native="login")
     br
     mu-raised-button(
-      label="登录",
+      label="登录/注册",
       :primary="true",
       :fullWidth="true",
       @click="login")
@@ -29,15 +29,15 @@
 
 <script>
 import MaterialImage from 'material-image';
-import { _user } from '@/api';
 import { mapActions } from 'vuex';
+import * as api from '@/api';
 
 export default {
   name: 'login',
   data() {
     return {
-      stuid: '',
-      pwd: '',
+      username: '',
+      password: '',
       loading: false,
     };
   },
@@ -52,36 +52,43 @@ export default {
       'showSnackbar',
     ]),
     async login() {
-      if (!this.stuid) {
-        this.showSnackbar('请填写账号');
+      if (!this.username) {
+        this.showSnackbar('请填写用户名');
         return;
       }
-      if (!this.pwd) {
+      if (!this.password) {
         this.showSnackbar('请填写密码');
         return;
       }
       this.loading = true;
-      const content = await _user.login({
-        stuid: this.stuid,
-        pwd: this.pwd,
+      const token = await api.createToken({
+        username: this.username,
+        password: this.password,
       });
-      this.loading = false;
-      if (!content) return;
-      const { user, token } = content;
-      if (user.type < 2) {
-        this.showSnackbar('限制访问（内测中）');
-        return;
+      let user;
+      if (token) {
+        localStorage.setItem('token', token);
+        user = await api.showUser('self');
+      } else {
+        this.showSnackbar('注册用户中');
+        user = await api.createUser({
+          username: this.username,
+          password: this.password,
+          insider: true,
+        });
       }
-      this.$store.commit('USER', user);
-      localStorage.setItem('token', token);
+      this.loading = false;
+      if (!user) return;
       const ua = navigator.userAgent.toLowerCase();
       const isWeixin = ua.indexOf('micromessenger') !== -1;
-      if (isWeixin && !user.openid) {
-        const rst = await _user.wxoauthurl({ state: 'bind' });
-        if (!rst) return;
-        location.href = rst.authurl;
+      const { redirect } = this.$route.query;
+      if (!user.openid && isWeixin) {
+        const authurl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxcf692473c3e08053&redirect_uri=${location.origin}${redirect || ''}&response_type=code&scope=snsapi_base&state=info#wechat_redirect`;
+        location.href = authurl;
       }
-      this.$router.replace('/forum');
+      this.$store.commit('USER', user);
+      this.showSnackbar(token ? '登录成功' : '注册成功，已自动登录');
+      this.$router.replace(redirect || '/');
     },
     createBg() {
       this.materialBg = new MaterialImage({

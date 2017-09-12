@@ -1,27 +1,21 @@
 <template lang="pug">
 #list
   mu-paper
-    .pic {{type && type.name}}
+    .pic {{type.name}}
     .tabulation
       mu-grid-list(:cellHeight="cellHeight", :cols="cols", :padding="12" ref="list")
         mu-grid-tile(:rows="1", :cols="1", v-for="(video, index) of videos", :key="index")
-          router-link(:to="`/play/${video._id}/1`")
-            .main-list-item(:style="{ backgroundImage: `url(/uploads/${video.posterPath})` }")
+          router-link(:to="`/play/${video._id}`")
+            .main-list-item(:style="{ backgroundImage: `url(/assets/${video.poster})` }")
           span(slot="title") {{video.title}}
 </template>
 
 <script>
-import { _video } from '@/api';
-import { mapState, mapGetters, mapActions } from 'vuex';
+import { mapState } from 'vuex';
+import * as api from '@/api';
 
 export default {
   name: 'list',
-  mounted() {
-    this.$nextTick(() => {
-      this.init();
-      this.getVideos();
-    });
-  },
   data() {
     return {
       listWidth: 0,
@@ -34,9 +28,6 @@ export default {
       'user',
       'screen',
     ]),
-    ...mapGetters([
-      'videoTypes',
-    ]),
     cols() {
       return Math.round(this.listWidth / 160);
     },
@@ -44,18 +35,39 @@ export default {
       return (this.listWidth * 1.4) / this.cols;
     },
   },
+  mounted() {
+    this.$nextTick(() => {
+      this.init();
+    });
+  },
+  activated() {
+    this.getType();
+    this.getVideos();
+  },
   methods: {
-    ...mapActions([
-    ]),
     init() {
       this.listWidth = this.$refs.list.$el.clientWidth;
     },
     async getVideos() {
-      const typeId = this.$route.params.type;
-      const content = await _video.list({ type: typeId });
-      if (!content) return;
-      this.videos = content.videos;
-      this.type = this.videoTypes.find(type => type._id === typeId);
+      const { type } = this.$route.params;
+      const { search } = this.$route.query;
+      const data = await api.indexVideo({
+        type: type || '',
+        search: search || '',
+      });
+      if (!data) return;
+      this.videos = data.videos;
+    },
+    async getType() {
+      const { type } = this.$route.params;
+      const { search } = this.$route.query;
+      if (type) {
+        this.type = await api.showType(type);
+      } else if (search) {
+        this.type = { name: '搜索结果' };
+      } else {
+        this.type = { name: '最新' };
+      }
     },
   },
   watch: {

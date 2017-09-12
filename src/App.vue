@@ -4,7 +4,6 @@
   keep-alive(:exclude="exclude")
     router-view.main-body
   copyright
-  login-box(:show="showLoginBox")
   mu-snackbar(
     v-if="snackbar.show",
     :message="snackbar.text",
@@ -14,16 +13,14 @@
 
 <script>
 import querystring from 'query-string';
-import { mapState, mapActions } from 'vuex';
-import { _user } from '@/api';
-import LoginBox from 'components/app/login-box';
-import MainMenu from 'components/app/main-menu';
-import Copyright from 'components/app/copyright';
+import { mapState } from 'vuex';
+import MainMenu from '@/components/app/main-menu';
+import Copyright from '@/components/app/copyright';
+import * as api from '@/api';
 
 export default {
   name: 'base',
   components: {
-    LoginBox,
     MainMenu,
     Copyright,
   },
@@ -36,52 +33,38 @@ export default {
     ...mapState([
       'user',
       'screen',
-      'showLoginBox',
       'snackbar',
     ]),
-    showBottom() {
-      return this.$route.meta.showBottom;
-    },
   },
   mounted() {
     const route = querystring.parse(location.search);
     const ua = navigator.userAgent.toLowerCase();
     const isWeixin = ua.indexOf('micromessenger') !== -1;
     if (route && route.code) {
-      this.handleCode(route.code, route.state);
+      this.createTokenByCode(route.code, route.state);
     } else if (localStorage.token) {
       this.getUser();
     } else if (isWeixin) {
-      this.getWXOauthUrl();
+      const authurl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxcf692473c3e08053&redirect_uri=${location.href}&response_type=code&scope=snsapi_base&state=token#wechat_redirect`;
+      location.href = authurl;
     }
-    this.getTypes();
     window.addEventListener('resize', () => this.$store.commit('WINDOW'));
   },
   methods: {
-    ...mapActions([
-      'getTypes',
-    ]),
-    async handleCode(code, state) {
-      let content;
-      if (state === 'info') content = await _user.wxoauth({ code });
-      if (state === 'bind') content = await _user.wxbind({ code });
-      if (!content) return;
-      const { user, token } = content;
-      this.$store.commit('USER', user);
-      if (token) localStorage.setItem('token', token);
-      this.$router.replace('/');
+    async createTokenByCode(code, state) {
+      if (state === 'info') {
+        await api.updateUser('self', { code }, { type: 'code' });
+      } else {
+        const token = await api.createToken({ code }, { type: 'code' });
+        if (token) localStorage.setItem('token', token);
+      }
+      this.$router.replace(this.$route.path);
+      if (localStorage.token) this.getUser();
     },
     async getUser() {
-      const content = await _user.get();
-      if (!content) return;
-      const { user, token } = content;
-      this.$store.commit('USER', user);
-      if (token) localStorage.setItem('token', token);
-    },
-    async getWXOauthUrl() {
-      const content = await _user.wxoauthurl({ state: 'info' });
-      if (!content) return;
-      location.href = content.authurl;
+      const data = await api.showUser('self');
+      if (!data) return;
+      this.$store.commit('USER', data);
     },
   },
 };
@@ -96,8 +79,7 @@ easeInOutFunction = cubic-bezier(0.445, 0.05, 0.55, 0.95)
 .main-body
   width 100%
   min-height 100vh
-  padding-bottom 1pc
-  @media (min-width: 480px)
+  @media (min-width: 900px)
     padding-top 165px
     padding-bottom 80px
     max-width 900px

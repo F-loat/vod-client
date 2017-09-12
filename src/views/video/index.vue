@@ -8,10 +8,11 @@
           :options="flickityOptions")
           .carousel-cell(
             v-for="banner of banners",
-            :style="{ backgroundImage: `url(/uploads/${banner.filePath})` }")
-        .carousel-titles(@click="handleBannerClick")
+            :style="{ backgroundImage: `url(/assets/${banner.path})` }")
+        .carousel-titles
           transition(name="fade", mode="out-in")
             .carousel-title(
+              @click="handleBannerClick",
               v-for="(banner, index) of banners",
               :class="{ link: banner.href }",
               v-if="index === selectedIndex",
@@ -19,9 +20,16 @@
               | {{banner.title}}
     mu-col(width="100", tablet="30", desktop="30")
       mu-paper.carousel-des
-        mu-float-button.search-button(icon="search")
+        mu-text-field.search-input(
+          v-model="search",
+          ref="search",
+          :class="{ active: searchInputVisible }",
+          @blur="searchInputVisible = false",
+          @keyup.enter.native="handleSearch")
+        mu-float-button.search-button(icon="search", @click.native="handleSearchButton")
         transition(name="fade-down", mode="out-in")
           .carousel-des-content(
+            @click="handleBannerClick",
             v-for="(banner, index) of banners",
             v-if="index === selectedIndex",
             :key="index")
@@ -37,23 +45,23 @@
         v-if="list.videos.length")
         mu-sub-header {{list.type.name}}
           span.pull-right(style="font-size: 12px; padding-right: 16px")
-            router-link.more(:to="'/list/' + list.type._id") 更多>
+            router-link.more(:to="'/list/' + (list.type._id || '')") 更多>
         mu-grid-tile(
           :rows="1",
           :cols="1",
           v-for="(video, index) of list.videos",
           v-if="screen.width > 480 ? index < cols : index < cols * 2",
           :key="video._id")
-          router-link(:to="`/play/${video._id}/1`")
+          router-link(:to="`/play/${video._id}`")
             .main-list-item(
-              :style="{ backgroundImage: `url(/uploads/${video.posterPath})` }")
+              :style="{ backgroundImage: `url(/assets/${video.poster})` }")
           span(slot="title") {{video.title}}
 </template>
 
 <script>
 import Flickity from '@/components/video/flickity';
-import { _video, _banner } from '@/api';
 import { mapState, mapActions } from 'vuex';
+import * as api from '@/api';
 
 export default {
   name: 'index',
@@ -69,10 +77,13 @@ export default {
         wrapAround: true,
         // autoPlay: 5000,
       },
+      search: '',
+      searchInputVisible: false,
       selectedIndex: 0,
       listWidth: 0,
       lists: [],
       banners: [],
+      types: [],
     };
   },
   computed: {
@@ -91,6 +102,7 @@ export default {
     this.$nextTick(() => {
       this.getVideo();
       this.getBanner();
+      this.getType();
     });
   },
   activated() {
@@ -107,22 +119,42 @@ export default {
         this.selectedIndex = flickity.flickity.selectedIndex;
       });
     },
-    async getVideo() {
-      const content = await _video.typed();
-      if (!content) return;
-      this.lists = content;
+    async getVideo(type) {
+      const data = await api.indexVideo({
+        type: type ? type._id : '',
+      });
+      if (!data) return;
+      this.lists.push({
+        type: type || { name: '最新' },
+        videos: data.videos,
+      });
     },
     async getBanner() {
-      const content = await _banner.list();
-      if (!content) return;
-      this.banners = content;
+      const data = await api.indexBanner();
+      if (!data) return;
+      this.banners = data.banners;
       this.$nextTick(() => this.init());
+    },
+    async getType() {
+      const data = await api.indexType({ type: 'video' });
+      if (!data) return;
+      this.types = data.types;
+      this.types.forEach(type => this.getVideo(type));
+    },
+    handleSearch() {
+      if (!this.search) return;
+      this.$router.push(`/list?search=${this.search}`);
+      this.search = '';
     },
     handleBannerClick() {
       const index = this.selectedIndex;
       const banner = this.banners[index];
-      if (banner.type === 0) this.$router.push(banner.href);
-      if (banner.type === 1) location.href = banner.href;
+      if (banner.type === 'inside') location.href = banner.href;
+      if (banner.type === 'outside') window.open(banner.href);
+    },
+    handleSearchButton() {
+      this.searchInputVisible = !this.searchInputVisible;
+      if (this.searchInputVisible) this.$refs.search.focus();
     },
   },
   watch: {
@@ -148,6 +180,7 @@ export default {
   width 100%
   height 340px
   background-size cover
+  background-position center
   @media (max-width: 480px)
     height 0
     padding-bottom 56.25%
@@ -158,7 +191,8 @@ export default {
   align-items center
   @media (max-width: 480px)
     position absolute
-    bottom 0
+    top 16px
+    right 0
     font-size 18px
     height 48px
 .carousel-title.link
@@ -177,6 +211,16 @@ export default {
 .carousel-des-content
   padding 1pc
   line-height 1.8
+  cursor pointer
+
+.search-input
+  position absolute
+  top -37px
+  right 72px
+  width 0
+  transition all .3s
+  &.active
+    width 256px
 
 .search-button
   position absolute

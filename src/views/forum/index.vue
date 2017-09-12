@@ -17,13 +17,13 @@
         @click="$router.push(`/forum/${topic._id}`)")
         .topic
           .topic-title {{topic.title}}
-          .topic-content {{topic.content}}
         .author
           mu-avatar(
-            :src="topic.author && topic.author.avatar ? `/uploads/${topic.author.avatar}` : '/static/img/youngon.gif'")
+            :src="topic.creater && topic.creater.avatar ? `/assets/${topic.creater.avatar}` : '/static/img/youngon.gif'")
           .author-info
-            strong {{topic.author.nickname || topic.author.stuid}}
-            span {{dateFormat(topic.createdAt)}}
+            strong {{topic.creater.nickname}}
+            span {{topic.createdAt | dateFormat}}
+          .topic-info {{topic.reply}}/{{topic.visit}}
     mu-infinite-scroll(
       :scroller="scroller",
       :loading="loading",
@@ -53,9 +53,9 @@
 </template>
 
 <script>
-import { _topic } from '@/api';
 import { mapState, mapActions } from 'vuex';
-import dateFormat from '@/utils/date/format';
+import { date } from '@/utils';
+import * as api from '@/api';
 
 export default {
   name: 'forum',
@@ -87,8 +87,15 @@ export default {
   mounted() {
     this.getTopics(true);
   },
+  filters: {
+    dateFormat: (value) => {
+      if (!value) return '';
+      return date.format(new Date(value));
+    },
+  },
   methods: {
     ...mapActions([
+      'showSnackbar',
     ]),
     async getTopics(init) {
       if (init) {
@@ -97,55 +104,40 @@ export default {
           current: 1,
           total: 1,
         };
-        const limit = this.page.limit;
-        this.refreshing = true;
-        const content = await _topic.list({
-          limit,
-          page: this.page.current,
-          type: this.$route.query.type,
-        });
-        this.refreshing = false;
-        if (!content) return;
-        this.topics = content.topics;
-        this.page.total = Math.ceil(content.totalCount / limit);
-      } else {
-        this.page.current += 1;
-        if (this.page.current > this.page.total) return;
-        const limit = this.page.limit;
-        this.loading = true;
-        const content = await _topic.list({
-          limit,
-          page: this.page.current,
-          type: this.$route.query.type,
-        });
-        this.loading = false;
-        if (!content) return;
-        this.topics = this.topics.concat(content.topics);
-        this.page.total = Math.ceil(content.totalCount / limit);
       }
+      if (this.page.current > this.page.total) return;
+      const limit = this.page.limit;
+      if (init) { this.refreshing = true; } else { this.loading = true; }
+      const data = await api.indexTopic({
+        limit,
+        page: this.page.current,
+        type: this.$route.query.type,
+      });
+      if (init) { this.refreshing = false; } else { this.loading = false; }
+      if (!data) return;
+      this.topics = data.topics;
+      this.page.total = Math.ceil(data.total / limit);
+      this.page.current += 1;
     },
     async sendTopic() {
       if (!this.user._id) {
-        const msg = this.user.nickname ? '绑定学号后可发帖' : '登录后可发帖';
-        this.$store.dispatch('showSnackbar', msg);
+        this.showSnackbar('登录后可发帖');
+        this.$router.push('/login');
         return;
       }
       const { title, content } = this.newForm;
       if (!title) {
-        this.$store.dispatch('showSnackbar', '请输入标题');
+        this.showSnackbar('请输入标题');
         return;
       }
-      const newTopic = await _topic.post({
+      await api.createTopic({
         title,
         content,
         type: this.$route.query.type,
       });
       this.newFormVisible = false;
-      if (!newTopic) return;
-      newTopic.author = this.user;
-      this.topics.unshift(newTopic);
+      this.getTopics(true);
     },
-    dateFormat: date => dateFormat(new Date(date)),
   },
   watch: {
     $route() {
@@ -170,6 +162,7 @@ export default {
 .list-item
   cursor pointer
   border-top 1px solid #eee
+  position relative
   @media (min-width: 480px)
     margin-bottom 1pc
 
@@ -191,8 +184,21 @@ export default {
   strong
     font-weight 700
 
+.topic-info
+  position absolute
+  right 1pc
+  top auto
+  color #999
+
 .add-topic
   position absolute
   bottom -28px
   right 40px
+  z-index 9
+
+@media (max-width: 480px)
+  .topic
+    padding 0.8pc 1pc
+  .author
+    padding 0 1pc 0.8pc
 </style>

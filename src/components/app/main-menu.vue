@@ -3,34 +3,52 @@
   mu-icon-button.menu-button(icon="menu", @click="open = true")
   mu-drawer(:open="open", :docked="false", @close="open = !open")
     .person-info
-      img.headimg(:src="user.headimgurl || (user.avatar ? `/uploads/${user.avatar}` : '/static/img/youngon.gif')")
-      .nickname(@click="$store.commit('LOGINBOX', true)")
-        span {{user.nickname || user.stuid || '账号登录'}}
-        span(v-if="user._id") [{{typeFormat(user.type)}}]
+      img.headimg(:src="user.headimgurl || (user.avatar ? `/assets/${user.avatar}` : '/static/img/youngon.gif')")
+      router-link.nickname(v-if="!user._id", to="/login") 账号登录
+      .nickname(v-else)
+        span(@click="logoutConfirmVisible = true") {{user.nickname}}
+        span [{{typeFormat(user.type)}}]
     mu-list
       mu-list-item(title="主页", to="/")
       mu-list-item(title="论坛", :toggleNested="true", :open="false")
         mu-icon(slot="left", value="group")
+        //- mu-list-item(
+        //-   slot="nested",
+        //-   title="全部",
+        //-   to="/forum")
         mu-list-item(
-          slot="nested",
-          title="全部",
-          to="/forum")
-        mu-list-item(
-          v-for="type of topicTypes",
+          v-for="type of types",
           slot="nested",
           :key="type._id",
           :title="type.name",
           :to="`/forum?type=${type._id}`")
+  mu-dialog(
+    :open="logoutConfirmVisible",
+    title="确认注销？",
+    @close="logoutConfirmVisible = false")
+    mu-flat-button(
+      label="确定",
+      slot="actions",
+      primary,
+      @click="logout")
+    mu-flat-button(
+      label="取消",
+      slot="actions",
+      primary,
+      @click="logoutConfirmVisible = false")
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
+import { mapState } from 'vuex';
+import * as api from '@/api';
 
 export default {
   name: 'main-menu',
   data() {
     return {
       open: false,
+      types: [],
+      logoutConfirmVisible: false,
     };
   },
   computed: {
@@ -38,15 +56,25 @@ export default {
       'user',
       'screen',
     ]),
-    ...mapGetters([
-      'topicTypes',
-    ]),
+  },
+  mounted() {
+    this.getTypes();
   },
   methods: {
     typeFormat(type) {
-      if (type > 9) return '管理员';
-      if (type >= 2) return '内测用户';
+      if (type === 'admin') return '管理员';
       return '普通用户';
+    },
+    async getTypes() {
+      const data = await api.indexType({ type: 'topic' });
+      if (!data) return;
+      this.types = data.types;
+    },
+    logout() {
+      localStorage.removeItem('token');
+      this.$store.commit('USER', {});
+      this.logoutConfirmVisible = false;
+      this.open = false;
     },
   },
   watch: {
