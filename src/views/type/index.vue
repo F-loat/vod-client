@@ -28,7 +28,6 @@
     mu-thead
       mu-tr
         mu-th 名称
-        mu-th 排序值
         mu-th 创建时间
         mu-th 创建人
     mu-tbody
@@ -36,8 +35,7 @@
         v-for="type of currentTypes",
         :key="type._id")
         mu-td {{type.name}}
-        mu-td {{type.sort}}
-        mu-td {{dateFormat(type.createdAt)}}
+        mu-td {{type.createdAt | dateFormat}}
         mu-td {{type.creater.nickname || type.creater.stuid}}
 
   //- 新增界面
@@ -50,11 +48,6 @@
       :fullWidth="true",
       :labelFloat="true",
       v-model="newForm.name")
-    mu-text-field.form-item(
-      label="排序值（可选）",
-      :fullWidth="true",
-      :labelFloat="true",
-      v-model="newForm.sort")
     mu-flat-button(primary, label="创建", @click="newType", slot="actions")
     mu-flat-button(primary, label="取消", @click="newFormVisible = false", slot="actions")
 
@@ -68,11 +61,6 @@
         :fullWidth="true",
         :labelFloat="true",
         v-model="editForm.name")
-      mu-text-field.form-item(
-        label="排序值（可选）",
-        :fullWidth="true",
-        :labelFloat="true",
-        v-model="editForm.sort")
       mu-flat-button(primary, label="保存", @click="modifyType", slot="actions")
       mu-flat-button(primary, label="取消", @click="editFormVisible = false", slot="actions")
 
@@ -101,8 +89,8 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex';
-import dateFormat from '@/utils/date/format';
-import { _type } from '@/api';
+import { date } from '@/utils';
+import * as api from '@/api';
 
 export default {
   name: 'type-manage',
@@ -112,13 +100,11 @@ export default {
       newFormVisible: false,
       newForm: {
         name: '',
-        sort: '',
       },
       editFormVisible: false,
       editForm: {
         _id: '',
         name: '',
-        sort: '',
       },
       delConfirmVisible: false,
       selectedRowsIndex: [],
@@ -139,6 +125,12 @@ export default {
       return this.topicTypes;
     },
   },
+  filters: {
+    dateFormat(value) {
+      if (!value) return '';
+      return date.format(new Date(value));
+    },
+  },
   mounted() {
     this.type = 'video';
   },
@@ -148,10 +140,9 @@ export default {
     ]),
     async newType() {
       const formData = this.newForm;
-      const type = await _type.post({
+      const type = await api.createType({
         name: formData.name,
         type: this.type,
-        sort: formData.sort,
       });
       if (!type) return;
       this.newFormVisible = false;
@@ -160,14 +151,13 @@ export default {
       this.$store.commit('TYPES', types);
       this.newForm = {
         name: '',
-        sort: null,
       };
     },
     async delType() {
       this.delConfirmVisible = false;
       const selectedTypeIds = this.selectedRowsIndex
         .map(index => this.currentTypes[index]._id);
-      const result = await _type.delete({
+      const result = await api.destroyType({
         _id: selectedTypeIds,
       });
       if (!result) return;
@@ -178,7 +168,7 @@ export default {
     },
     async modifyType() {
       this.editFormVisible = false;
-      const editedType = await _type.put(this.editForm);
+      const editedType = await api.updateType(this.editForm);
       if (!editedType) return;
       const allTypes = this.types.map((type) => {
         if (type._id === editedType._id) return editedType;
@@ -197,7 +187,6 @@ export default {
       this.editForm = {
         _id: type._id,
         name: type.name,
-        sort: type.sort,
       };
       this.editFormVisible = true;
     },
@@ -207,7 +196,6 @@ export default {
     handleSelete(selectedRowsIndex) {
       this.selectedRowsIndex = selectedRowsIndex;
     },
-    dateFormat: date => dateFormat(new Date(date)),
   },
 };
 </script>

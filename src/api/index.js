@@ -1,93 +1,79 @@
-import axios from 'axios';
-import store from '../store';
+import { request } from '@/utils';
 
-const http = axios.create({
-  baseURL: '/request',
-});
+const indexBanner = params => request.get('/banners', { params });
+const createBanner = data => request.post('/banners', data);
+const destroyBanner = (id, params) => request.delete(`/banners/${id}`, { params });
 
-http.interceptors.request.use((config) => {
-  const newConfig = config;
-  if (sessionStorage.token) {
-    newConfig.headers = { Authorization: `Bearer ${sessionStorage.token}` };
-  }
-  return newConfig;
-}, (err) => {
-  store.dispatch('showSnackbar', err.message);
-});
+const indexVideo = params => request.get('/videos', { params });
+const showVideo = (id, params) => request.get(`/videos/${id}`, { params });
+const createVideo = data => request.post('/videos', data);
+const updateVideo = (id, data) => request.put(`/videos/${id}`, data);
+const destroyVideo = (id, params) => request.delete(`/videos/${id}`, { params });
 
-http.interceptors.response.use((res) => {
-  if (res.data.state === 1) return res.data.content;
-  const msg = res.data.msg;
-  if (msg) store.dispatch('showSnackbar', msg);
-  return false;
-}, (err) => {
-  const res = err.response;
-  if (res.status === 401 || res.status === 403) {
-    localStorage.removeItem('token');
-  }
-  const msg = res.data.msg;
-  if (msg) store.dispatch('showSnackbar', msg);
-  return false;
-});
+const indexEpisode = params => request.get('/episodes', { params });
+const showEpisode = (id, params) => request.get(`/episodes/${id}`, { params });
+const createEpisode = data => request.post('/episodes', data);
+const transcodeEpisode = (id, params) => request.get(`/episodes/${id}/transcode`, { params });
+const updateEpisode = data => request.put('/episodes', data);
+const destroyEpisode = (id, params) => request.delete(`/episodes/${id}`, { params });
 
-const _banner = {
-  post: data => http.post('/banner', data),
-  delete: params => http.delete('/banner', { params }),
-  list: params => http.get('/banner/list', { params }),
-};
+const indexUser = params => request.get('/users', { params });
+const showUser = (id, params) => request.get(`/users/${id}`, { params });
+const updateUser = data => request.put('/users', data);
+const destroyUser = (id, params) => request.delete(`/users/${id}`, { params });
 
-const _video = {
-  get: async (params) => {
-    try {
-      const search = await axios
-        .get('/douban/search', { params });
-      const subjects = search.data.subjects;
-      if (!subjects || !subjects[0]) return false;
-      const info = await axios
-        .get(`/douban/subject/${subjects[0].id}`);
-      return info.data;
-    } catch (err) {
-      const msg = err.response.data.msg;
-      if (msg) store.dispatch('showSnackbar', msg);
-      return false;
-    }
-  },
-  post: data => http.post('/video', data),
-  put: data => http.put('/video', data),
-  delete: params => http.delete('/video', { params }),
-  list: params => http.get('/video/list', { params }),
-};
+const createToken = (data, params) => request.post('/tokens', data, { params });
+const destroyToken = (id, params) => request.delete(`/tokens/${id}`, { params });
 
-const _episode = {
-  post: (data, config) => http.post('/episode', data, config),
-  transcode: data => http.post('/episode/transcoding', data),
-  list: params => http.get('/episode/list', { params }),
-};
+const indexType = params => request.get('/types', { params });
+const createType = data => request.post('/types', data);
+const updateType = data => request.put('/types', data);
+const destroyType = (id, params) => request.delete(`/types/${id}`, { params });
 
-const _user = {
-  login: data => http.post('/user/login', data),
-  logout: params => http.get('/user/logout', { params }),
-  put: data => http.put('/user', data),
-  delete: params => http.delete('/user', { params }),
-  list: params => http.get('/user/list', { params }),
-};
+const createTopic = data => request.post('/topics', data);
+const indexTopic = params => request.get('/topics', { params });
+const showTopic = (id, params) => request.get(`/topics/${id}`, { params });
 
-const _type = {
-  post: data => http.post('/type', data),
-  put: data => http.put('/type', data),
-  delete: params => http.delete('/type', { params }),
-  list: params => http.get('/type/list', { params }),
-};
+const createComment = data => request.post('/comments', data);
+const indexComment = params => request.get('/comments', { params });
 
-const _log = {
-  list: params => http.get('/log/list', { params }),
+const indexLog = params => request.get('/logs', { params });
+const createFile = (file, config) => {
+  const form = new FormData();
+  form.append('file', file);
+  return request.post('/files', form, config);
 };
 
 export {
-  _banner,
-  _video,
-  _episode,
-  _user,
-  _type,
-  _log,
+  indexBanner,
+  createBanner,
+  destroyBanner,
+  indexVideo,
+  showVideo,
+  createVideo,
+  updateVideo,
+  destroyVideo,
+  indexEpisode,
+  showEpisode,
+  createEpisode,
+  transcodeEpisode,
+  updateEpisode,
+  destroyEpisode,
+  indexUser,
+  showUser,
+  updateUser,
+  destroyUser,
+  createToken,
+  destroyToken,
+  indexType,
+  createType,
+  updateType,
+  destroyType,
+  showTopic,
+  createTopic,
+  indexTopic,
+  createComment,
+  indexComment,
+  createFile,
+  indexLog,
 };

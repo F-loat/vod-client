@@ -46,9 +46,13 @@ module.exports = {
         target: 'http://127.0.0.1:7517',
         changeOrigin: true
       },
-      '/uploads': {
-        target: 'http://vod.youngon.com.cn',
-        changeOrigin: true
+      '/assets': {
+        // target: 'https://vod.youngon.com.cn',
+        target: 'http://127.0.0.1',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/assets': '/'
+        }
       }
     },
     // CSS Sourcemaps off by default because relative paths are "buggy"

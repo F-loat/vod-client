@@ -33,7 +33,7 @@
         iconClass="nav-menu-button",
         slot="left",
         @click="nav.open = !nav.open")
-      mu-flat-button(:label="String(user.stuid)", slot="right")
+      mu-flat-button(:label="user.nickname", slot="right")
       mu-icon-menu(
         icon="more_vert",
         slot="right",
@@ -87,11 +87,22 @@ export default {
     ]),
   },
   mounted() {
+    this.adjust();
   },
   methods: {
     logout() {
       this.alert.open = false;
       this.$router.push('/login');
+    },
+    adjust() {
+      if (document.body.clientWidth < 900) {
+        this.nav.open = false;
+      }
+    },
+  },
+  watch: {
+    $route() {
+      this.adjust();
     },
   },
 };

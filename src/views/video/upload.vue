@@ -1,13 +1,17 @@
 <template lang="pug">
 .page.video-upload
-  video-upload-form(:form="form", :videoTypes="videoTypes")
+  video-upload-form(
+    :form="form",
+    :episodes="episodes",
+    :videoTypes="videoTypes",
+    ref="form")
   mu-float-button.float-button(icon="send", @click="send")
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import { _video } from '@/api';
-import VideoUploadForm from '@/components';
+import { mapGetters, mapActions } from 'vuex';
+import { VideoUploadForm } from '@/components';
+import * as api from '@/api';
 
 export default {
   name: 'video-upload',
@@ -25,12 +29,9 @@ export default {
         type: [],
         aka: '',
         summary: '',
-        poster: {
-          imgsrc: '',
-        },
-        episodes: [],
-        sort: '',
+        poster: '',
       },
+      episodes: [],
     };
   },
   computed: {
@@ -39,41 +40,52 @@ export default {
     ]),
   },
   methods: {
+    ...mapActions([
+      'showPopup',
+      'showSnackbar',
+    ]),
     async send() {
-      const formData = this.form;
-      const allEpisodeUpload = formData.episodes.every(episode => episode.percent === 100);
-      if (!allEpisodeUpload) {
-        this.$store.dispatch('showSnackbar', '请先上传视频');
+      const { form } = this;
+      if (!form.title) {
+        this.showSnackbar('请输入视频名称');
         return;
       }
-      if (!formData.title) {
-        this.$store.dispatch('showSnackbar', '请输入视频名称');
+      if (!form.type.length) {
+        this.showSnackbar('请选择视频类型');
         return;
       }
-      if (!formData.type.length) {
-        this.$store.dispatch('showSnackbar', '请选择视频类型');
-        return;
-      }
-      const form = new FormData();
-      const episodes = JSON.stringify(formData.episodes.map(episode => ({
-        path: episode.path,
-        name: episode.name,
-      })));
-      form.append('poster', formData.poster.raw);
-      form.append('title', formData.title);
-      form.append('directors', formData.directors);
-      form.append('performers', formData.performers);
-      form.append('year', formData.year);
-      form.append('countries', formData.countries);
-      form.append('episodes', episodes);
-      form.append('type', formData.type);
-      form.append('aka', formData.aka);
-      form.append('summary', formData.summary);
-      form.append('sort', formData.sort);
-      const res = await _video.post(form);
-      if (!res) return;
-      this.$store.dispatch('showPopup', '视频保存成功');
+      const poster = await api.createFile(form.poster, { type: 'poster' });
+      form.poster = poster;
+      const rst = await api.createVideo(form);
+      if (!rst) return;
+      this.showPopup('视频信息已上传');
+      await this.sendEpisodes(rst._id);
+      this.showPopup('视频上传完成');
+      this.$refs.form.reset();
       Object.assign(this.$data, this.$options.data());
+    },
+    async sendEpisodes(belong) {
+      /* eslint-disable */
+      const episodes = this.episodes;
+      for (const episode of episodes) {
+        if (episode.percent === 100) continue;
+        const path = await api.createFile(episode.raw, {
+          params: { type: 'episode' },
+          onUploadProgress(event) {
+            const percent = (event.loaded / event.total) * 100;
+            if (percent) episode.percent = percent;
+          },
+        });
+        if (!path) return;
+        const rst = await api.createEpisode({
+          name: episode.name,
+          belong,
+          path,
+        });
+        episode.state = 1;
+        episode.path = path;
+        /* eslint-enable */
+      }
     },
   },
 };

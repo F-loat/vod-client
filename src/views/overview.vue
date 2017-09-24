@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { _log } from '@/api';
+import * as api from '@/api';
 import { mapState } from 'vuex';
 
 export default {
@@ -35,7 +35,7 @@ export default {
   methods: {
     async getLogs() {
       this.$store.commit('PROGRESS', true);
-      const content = await _log.list();
+      const content = await api.indexLog();
       this.$store.commit('PROGRESS', false);
       if (!content) return;
       this.logs = content.split('\n');

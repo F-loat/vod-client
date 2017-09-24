@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import { _user, _type } from '@/api';
+import * as api from '@/api';
 
 Vue.use(Vuex);
 
@@ -21,17 +21,15 @@ const store = new Vuex.Store({
     progress: {
       show: false,
     },
+    screen: {
+      width: document.body.clientWidth,
+      height: document.body.clientHeight,
+    },
   },
   mutations: {
     /* eslint no-param-reassign: ["error", { "props": false }] */
     USER(state, user) {
       state.user = user;
-      if (user._id) {
-        sessionStorage.setItem('user', JSON.stringify(user));
-      } else {
-        _user.logout();
-        sessionStorage.removeItem('user');
-      }
     },
     TYPES(state, types) {
       state.types = types;
@@ -45,14 +43,18 @@ const store = new Vuex.Store({
     PROGRESS(state, flag) {
       state.progress.show = flag;
     },
+    WINDOW(state) {
+      state.screen.width = document.body.clientWidth;
+      state.screen.height = document.body.clientHeight;
+    },
   },
   actions: {
     async getTypes({ commit, dispatch }) {
       commit('PROGRESS', true);
-      const types = await _type.list();
+      const data = await api.indexType();
       commit('PROGRESS', false);
-      if (!types) return;
-      commit('TYPES', types);
+      if (!data) return;
+      commit('TYPES', data.types);
       dispatch('showPopup', '更新成功');
     },
     showPopup({ commit, state }, text) {

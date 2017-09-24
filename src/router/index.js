@@ -13,8 +13,6 @@ import bannerList from '@/views/banner/list';
 import forumTopic from '@/views/forum/topic';
 import typeManage from '@/views/type';
 
-import store from '../store';
-
 Vue.use(Router);
 
 const routes = [
@@ -53,7 +51,7 @@ const routes = [
     component: layout,
     meta: {
       title: '轮换图管理',
-      icon: 'movie',
+      icon: 'photo',
       leaf: true,
     },
     children: [
@@ -107,8 +105,8 @@ const router = new Router({
 router.beforeEach((to, from, next) => {
   const token = sessionStorage.token;
   if (token && to.path === '/login') {
-    store.commit('USER', {});
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
   }
   if (!token && to.path !== '/login') {
     next({ path: '/login' });

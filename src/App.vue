@@ -25,16 +25,15 @@ export default {
   mounted() {
     this.getUser();
     this.getTypes();
+    if (localStorage.showBg) this.createBg();
   },
   methods: {
     ...mapActions([
       'getTypes',
     ]),
     getUser() {
-      const user = JSON.parse(sessionStorage.user);
-      if (!user) return;
-      this.$store.commit('USER', user);
-      if (user.theme && user.theme.showBg) this.createBg();
+      const user = sessionStorage.user;
+      if (user) this.$store.commit('USER', JSON.parse(user));
     },
     createBg() {
       this.materialBg = new MaterialImage({

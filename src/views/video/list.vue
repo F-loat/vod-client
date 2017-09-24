@@ -43,8 +43,6 @@
       mu-thead
         mu-tr
           mu-th 名称
-          mu-th 导演
-          mu-th 主演
           mu-th 年代
           mu-th 国家
           mu-th 关键字
@@ -52,13 +50,12 @@
       mu-tbody
         mu-tr(v-for="video of videos", :key="video._id")
           mu-td {{video.title}}
-          mu-td
-            span(v-for="director of video.directors") {{director}}
-          mu-td {{String(video.performers)}}
           mu-td {{video.year}}
           mu-td {{String(video.countries)}}
           mu-td {{String(video.aka)}}
-          mu-td {{video.creater.nickname || video.creater.stuid}}
+          mu-td(
+            v-for="creater of video.creater",
+            :key="creater._id") {{creater.nickname}}
     mu-pagination.list-pagination(
       :total="page.total",
       :current="page.current",
@@ -72,17 +69,17 @@
     :scrollable="true",
     title="视频信息编辑",
     @close="editFormVisible = false")
-    video-upload-form(:form="editForm", :videoTypes="videoTypes")
+    video-upload-form(:form="editForm", :videoTypes="videoTypes", :show-uploader="false")
     mu-flat-button(
-    label="保存",
-    slot="actions",
-    primary,
-    @click="modifyVideo")
+      label="保存",
+      slot="actions",
+      primary,
+      @click="modifyVideo")
     mu-flat-button(
-    label="取消",
-    slot="actions",
-    primary,
-    @click="editFormVisible = false")
+      label="取消",
+      slot="actions",
+      primary,
+      @click="editFormVisible = false")
 
   //- 确认删除对话框
   mu-dialog(
@@ -91,15 +88,15 @@
     title="确认删除？",
     @close="delConfirmVisible = false")
     mu-flat-button(
-    label="确定",
-    slot="actions",
-    primary,
-    @click="delVideo")
+      label="确定",
+      slot="actions",
+      primary,
+      @click="delVideo")
     mu-flat-button(
-    label="取消",
-    slot="actions",
-    primary,
-    @click="delConfirmVisible = false")
+      label="取消",
+      slot="actions",
+      primary,
+      @click="delConfirmVisible = false")
 
   //- 剧集管理界面
   mu-dialog(
@@ -121,34 +118,32 @@
         mu-tr
           mu-th 名称
           mu-th 状态
-          mu-th 排序值
           mu-th 创建人
           mu-th 操作
       mu-tbody
         mu-tr(v-for="episode of episodes", :key="episode._id")
           mu-td {{episode.name}}
           mu-td {{stateFormat(episode.state)}}
-          mu-td {{episode.sort}}
-          mu-td {{episode.creater.nickname || episode.creater.stuid}}
+          mu-td {{episode.creater.nickname}}
           mu-td
             mu-icon-button(icon="edit")
             mu-icon-button(icon="delete")
     mu-flat-button(
-    label="完成",
-    slot="actions",
-    primary,
-    @click="handleManageHidden")
+      label="完成",
+      slot="actions",
+      primary,
+      @click="handleManageHidden")
     mu-flat-button(
-    label="取消",
-    slot="actions",
-    primary,
-    @click="handleManageHidden")
+      label="取消",
+      slot="actions",
+      primary,
+      @click="handleManageHidden")
 </template>
 
 <script>
-import { _video, _episode } from '@/api';
 import { mapState, mapGetters, mapActions } from 'vuex';
-import VideoUploadForm from '@/components';
+import { VideoUploadForm } from '@/components';
+import * as api from '@/api';
 
 export default {
   name: 'video-list',
@@ -176,11 +171,7 @@ export default {
         type: [],
         aka: '',
         summary: '',
-        poster: {
-          imgsrc: '',
-        },
-        episodes: [],
-        sort: '',
+        poster: '',
       },
       delConfirmVisible: false,
       episodesManageVisible: false,
@@ -196,7 +187,8 @@ export default {
       'videoTypes',
     ]),
   },
-  mounted() {
+  activated() {
+    this.page.current = Number(this.$route.query.page) || 1;
     this.getVideos();
   },
   methods: {
@@ -205,18 +197,16 @@ export default {
       'showSnackbar',
     ]),
     async getVideos() {
-      this.$store.commit('PROGRESS', true);
       const { limit, current, search } = this.page;
-      const content = await _video.list({
+      const content = await api.indexVideo({
         type: this.type,
         limit,
         page: current,
         search,
       });
-      this.$store.commit('PROGRESS', false);
       if (!content) return;
       this.videos = content.videos;
-      this.page.total = content.totalCount;
+      this.page.total = content.total;
       this.showPopup('更新成功');
     },
     searchVideos() {
@@ -224,51 +214,34 @@ export default {
       this.getVideos();
     },
     async modifyVideo() {
-      const formData = this.editForm;
-      const allEpisodeUpload = formData.episodes.every(episode => episode.percent === 100);
-      if (!allEpisodeUpload) {
-        this.showSnackbar('请先上传视频');
-        return;
-      }
-      if (!formData.title) {
+      const form = this.editForm;
+      if (!form.title) {
         this.showSnackbar('请输入视频名称');
         return;
       }
-      if (!formData.type.length) {
+      if (!form.type.length) {
         this.showSnackbar('请选择视频类型');
         return;
       }
       this.editFormVisible = false;
-      const form = new FormData();
-      const episodes = JSON.stringify(formData.episodes.map(episode => ({
-        path: episode.path,
-        name: episode.name,
-      })));
-      const poster = formData.poster.raw;
-      if (poster) form.append('poster', poster);
-      form.append('_id', this.selectedVideo._id);
-      form.append('title', formData.title);
-      form.append('directors', formData.directors);
-      form.append('performers', formData.performers);
-      form.append('year', formData.year);
-      form.append('countries', formData.countries);
-      form.append('episodes', episodes);
-      form.append('type', formData.type);
-      form.append('aka', formData.aka);
-      form.append('summary', formData.summary);
-      form.append('sort', formData.sort);
-      const res = await _video.put(form);
+      if (typeof form.poster !== 'string') {
+        const poster = await api.createFile(form.poster, { type: 'poster' });
+        form.poster = poster;
+      } else {
+        form.poster = form.poster.replace('/assets', '');
+      }
+      const res = await api.updateVideo(form._id, form);
       if (!res) return;
       Object.assign(this.$data.editForm, this.$options.data().editForm);
       this.showPopup('信息保存成功');
+      this.getVideos();
     },
     async delVideo() {
       this.delConfirmVisible = false;
-      const result = await _video.delete({
-        _id: this.selectedVideo._id,
-      });
-      if (!result) return;
+      const rst = await api.destroyVideo(this.selectedVideo._id);
+      if (!rst) return;
       this.showPopup('删除成功');
+      this.getVideos();
     },
     handleSelete(selectedRowsIndex) {
       this.selectedVideo = this.videos[selectedRowsIndex];
@@ -283,21 +256,8 @@ export default {
         return;
       }
       const video = this.selectedVideo;
-      this.editForm = {
-        title: video.title,
-        directors: video.directors.toString(),
-        performers: video.performers.toString(),
-        year: video.year,
-        countries: video.countries.toString(),
-        type: video.type,
-        aka: video.aka.toString(),
-        summary: video.summary,
-        poster: {
-          imgsrc: `/uploads/${video.posterPath}`,
-        },
-        episodes: [],
-        sort: video.sort,
-      };
+      Object.assign(this.editForm, video);
+      this.editForm.poster = `/assets/${video.poster}`;
       this.editFormVisible = true;
     },
     async handleManage() {
@@ -307,9 +267,9 @@ export default {
         return;
       }
       this.episodesManageVisible = true;
-      const episodes = await _episode.list({ videoId: video._id });
-      if (!episodes) return;
-      this.episodes = episodes;
+      const data = await api.indexEpisode({ belong: video._id });
+      if (!data) return;
+      this.episodes = data.episodes;
     },
     handleManageHidden() {
       this.episodesManageVisible = false;
@@ -318,6 +278,7 @@ export default {
     handlePageChange(page) {
       this.page.current = page;
       this.getVideos();
+      this.$router.replace(`${this.$route.path}?page=${page}`);
     },
     stateFormat: (state) => {
       let result = '';
@@ -344,12 +305,12 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.video-list {
-  min-height: 536px;
+.content {
+  overflow: hidden;
 }
 
-.no-data {
-  min-height: 450px;
+.video-list {
+  min-height: 536px;
 }
 
 .edit-form {

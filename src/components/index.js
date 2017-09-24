@@ -1,3 +1,7 @@
+import BannerForm from './banner-form';
 import VideoUploadForm from './video-upload-form';
 
-export default VideoUploadForm;
+export {
+  BannerForm,
+  VideoUploadForm,
+};

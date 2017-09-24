@@ -2,7 +2,7 @@
 .video-upload-form
   .poster-wrap.pull-left
     mu-paper
-      .poster(:style="`background-image: url('${form.poster.imgsrc}')`")
+      .poster(:style="`background-image: url('${poster || form.poster}')`")
     mu-flat-button(label="选取封面")
       input.poster-choose-button(
         type="file",
@@ -53,11 +53,6 @@
     hintText="请输入关键字",
     :labelFloat="true",
     v-model="form.aka")
-  mu-text-field.form-item(
-    label="排序值（可选）",
-    hintText="请输入排序值",
-    :labelFloat="true",
-    v-model="form.sort")
   br
   mu-text-field(
     label="描述",
@@ -68,9 +63,9 @@
     :labelFloat="true",
     :fullWidth ="true",
     v-model="form.summary")
-  .upload-files
+  .upload-files(v-if="showUploader")
     .episodes-wrap
-      .episodes-item(v-for="(episode, index) of form.episodes")
+      .episodes-item(v-for="(episode, index) of episodes")
         .episode-info
           .episode-info-text
             .episode-name {{episode.raw.name}}
@@ -85,16 +80,12 @@
         :multiple="true",
         accept="video/*",
         @change="chooseEpisode()")
-    mu-raised-button.episode-upload-button(
-      label="上传视频",
-      icon="cloud_upload",
-      @click="sendEpisodes")
 </template>
 
 <script>
 import lrz from 'lrz';
-import { _video, _episode } from '@/api';
 import { mapActions } from 'vuex';
+import { douban } from '@/utils';
 
 const search = {
   title: '',
@@ -107,21 +98,13 @@ export default {
     form: {
       type: Object,
       default() {
-        return {
-          title: '',
-          directors: '',
-          performers: '',
-          year: '',
-          countries: '',
-          type: [],
-          aka: '',
-          summary: '',
-          poster: {
-            imgsrc: '',
-          },
-          episodes: [],
-          sort: '',
-        };
+        return {};
+      },
+    },
+    episodes: {
+      type: Array,
+      default() {
+        return [];
       },
     },
     videoTypes: {
@@ -130,6 +113,17 @@ export default {
         return [];
       },
     },
+    showUploader: {
+      type: Boolean,
+      default() {
+        return true;
+      },
+    },
+  },
+  data() {
+    return {
+      poster: '',
+    };
   },
   methods: {
     ...mapActions([
@@ -139,8 +133,8 @@ export default {
       const poster = url || event.target.files[0];
       if (!poster) return;
       const rst = await lrz(poster, { quality: 0.8 });
-      this.form.poster.imgsrc = rst.base64;
-      this.form.poster.raw = rst.file;
+      this.poster = rst.base64;
+      this.form.poster = rst.file;
     },
     chooseEpisode() {
       const episodes = event.target.files;
@@ -149,7 +143,7 @@ export default {
       for (let i = 0; i < length; i += 1) {
         if (episodes[i].type.indexOf('video') !== -1) {
           const episode = episodes[i];
-          this.form.episodes.push({
+          this.episodes.push({
             name: episode.name,
             raw: episode,
             percent: 0,
@@ -160,6 +154,14 @@ export default {
         }
       }
     },
+    delEpisode(index) {
+      const episode = this.episodes[index];
+      if (episode.percent !== 0) {
+        this.showSnackbar('已上传文件请在视频管理中删除');
+        return;
+      }
+      this.episodes.splice(index, 1);
+    },
     async getInfo(next) {
       if (search.title !== this.form.title) {
         search.title = this.form.title;
@@ -167,55 +169,23 @@ export default {
       }
       if (!next && search.start < 2) return;
       if (!next) search.start -= 2;
-      this.$store.commit('PROGRESS', true);
-      const info = await _video.get({
+      const info = await douban.show({
         q: search.title,
         start: search.start,
         count: 1,
       });
-      this.$store.commit('PROGRESS', false);
       if (!info) return;
       const reg = /(^https:\/\/(.*)\.doubanio.com)/;
       const imguri = info.images.large.replace(reg, '/doubanio');
       this.choosePoster(imguri);
-      const form = this.form;
-      form.directors = info.directors.map(director => director.name).toString();
-      form.performers = info.casts.map(cast => cast.name).toString();
-      form.year = info.year;
-      form.countries = info.countries.toString();
-      form.aka = info.aka.toString();
-      form.summary = info.summary;
+      info.directors = info.directors.map(director => director.name);
+      info.performers = info.casts.map(cast => cast.name);
+      info.title = this.form.title;
+      Object.assign(this.form, info);
       search.start += 1;
     },
-    async sendEpisodes() {
-      /* eslint-disable */
-      const episodes = this.form.episodes;
-      if (!episodes.length) {
-        this.showSnackbar('请先选择文件');
-        return;
-      }
-      for (const episode of episodes) {
-        const form = new FormData();
-        form.append('episode', episode.raw);
-        if (episode.percent === 100) continue;
-        const content = await _episode.post(form, {
-          onUploadProgress: (event) => {
-            const percent = event.loaded / event.total * 100;
-            if (percent) episode.percent = percent;
-          },
-        });
-        episode.state = 1;
-        episode.path = content;
-      }
-      /* eslint-enable */
-    },
-    delEpisode(index) {
-      const episode = this.form.episodes[index];
-      if (episode.percent !== 0) {
-        this.showSnackbar('已上传文件请在视频管理中删除');
-        return;
-      }
-      this.form.episodes.splice(index, 1);
+    reset() {
+      Object.assign(this.$data, this.$options.data());
     },
   },
 };

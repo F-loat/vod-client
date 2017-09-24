@@ -7,7 +7,7 @@
       hintText="请输入账号",
       :fullWidth="true",
       :labelFloat="true",
-      v-model="stuid",
+      v-model="username",
       @keyup.enter.native="login")
     mu-text-field(
       label="密码",
@@ -16,7 +16,7 @@
       :labelFloat="true",
       :fullWidth="true",
       autocomplet="off",
-      v-model="pwd",
+      v-model="password",
       @keyup.enter.native="login")
     br
     mu-raised-button(
@@ -28,14 +28,15 @@
 </template>
 
 <script>
-import { _user } from '@/api';
+import * as api from '@/api';
+import { mapActions } from 'vuex';
 
 export default {
   name: 'login',
   data() {
     return {
-      stuid: '',
-      pwd: '',
+      username: '',
+      password: '',
       loading: false,
     };
   },
@@ -43,33 +44,38 @@ export default {
     this.$parent.createBg();
   },
   methods: {
+    ...mapActions([
+      'showSnackbar',
+    ]),
     async login() {
-      if (!this.stuid) {
-        this.$store.dispatch('showSnackbar', '请填写账号');
+      if (!this.username) {
+        this.showSnackbar('请填写账号');
         return;
       }
-      if (!this.pwd) {
-        this.$store.dispatch('showSnackbar', '请填写密码');
+      if (!this.password) {
+        this.showSnackbar('请填写密码');
         return;
       }
       this.loading = true;
-      const content = await _user.login({
-        stuid: this.stuid,
-        pwd: this.pwd,
+      const token = await api.createToken({
+        username: this.username,
+        password: this.password,
       });
       this.loading = false;
-      if (!content) return;
-      const { user, token } = content;
-      if (user.type <= 9) {
-        this.$store.dispatch('showSnackbar', '管理员可用');
+      if (!token) return;
+      sessionStorage.setItem('token', token);
+      const user = await api.showUser('self');
+      if (!user) return;
+      if (user.type !== 'admin') {
+        this.showSnackbar('管理员可用');
         return;
       }
-      if (token) sessionStorage.setItem('token', token);
-      if (!user.theme || !user.theme.showBg) {
+      this.$store.commit('USER', user);
+      sessionStorage.setItem('user', JSON.stringify(user));
+      if (!localStorage.showBg) {
         this.$parent.materialBg.destroy();
       }
-      this.$store.commit('USER', user);
-      this.$router.push({ path: '/' });
+      this.$router.replace({ path: '/' });
     },
     changeBackground() {
       this.$parent.materialBg.protract();
