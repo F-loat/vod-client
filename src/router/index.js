@@ -1,17 +1,17 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import layout from '@/views/layout';
 import login from '@/views/login';
-import overview from '@/views/overview';
+import layout from '@/views/admin/layout';
+import overview from '@/views/admin/overview';
 
-import userList from '@/views/user/list';
-import videoList from '@/views/video/list';
-import videoUpload from '@/views/video/upload';
-import videoTranscode from '@/views/video/transcode';
-import bannerList from '@/views/banner/list';
-import forumTopic from '@/views/forum/topic';
-import typeManage from '@/views/type';
+import userList from '@/views/admin/user/list';
+import videoList from '@/views/admin/video/list';
+import videoUpload from '@/views/admin/video/upload';
+import videoTranscode from '@/views/admin/video/transcode';
+import bannerList from '@/views/admin/banner/list';
+import forumTopic from '@/views/admin/forum/topic';
+import typeManage from '@/views/admin/type';
 
 Vue.use(Router);
 
@@ -22,32 +22,33 @@ const routes = [
     meta: { hidden: true },
   },
   {
-    path: '/',
+    path: '/admin',
     component: layout,
+    alias: '/',
     meta: {
       title: '概览',
       icon: 'equalizer',
       leaf: true,
     },
     children: [
-      { path: '/', component: overview, meta: { title: '概览' } },
+      { path: '/admin', component: overview, meta: { title: '概览' } },
     ],
   },
   {
-    path: '/video',
+    path: '/admin/video',
     component: layout,
     meta: {
       title: '视频管理',
       icon: 'movie',
     },
     children: [
-      { path: '/video/upload', component: videoUpload, meta: { title: '视频上传' } },
-      { path: '/video/list', component: videoList, meta: { title: '视频列表' } },
-      { path: '/video/transcode', component: videoTranscode, meta: { title: '转码队列' } },
+      { path: '/admin/video/upload', component: videoUpload, meta: { title: '视频上传' } },
+      { path: '/admin/video/list', component: videoList, meta: { title: '视频列表' } },
+      { path: '/admin/video/transcode', component: videoTranscode, meta: { title: '转码队列' } },
     ],
   },
   {
-    path: '/banner',
+    path: '/admin/banner',
     component: layout,
     meta: {
       title: '轮换图管理',
@@ -55,11 +56,11 @@ const routes = [
       leaf: true,
     },
     children: [
-      { path: '/banner', component: bannerList, meta: { title: '轮换图列表' } },
+      { path: '/admin/banner', component: bannerList, meta: { title: '轮换图列表' } },
     ],
   },
   {
-    path: '/user',
+    path: '/admin/user',
     component: layout,
     meta: {
       title: '用户管理',
@@ -67,11 +68,11 @@ const routes = [
       leaf: true,
     },
     children: [
-      { path: '/user', component: userList, meta: { title: '用户列表' } },
+      { path: '/admin/user', component: userList, meta: { title: '用户列表' } },
     ],
   },
   {
-    path: '/forum',
+    path: '/admin/forum',
     component: layout,
     meta: {
       title: '论坛管理',
@@ -79,11 +80,11 @@ const routes = [
       leaf: true,
     },
     children: [
-      { path: '/forum', component: forumTopic, meta: { title: '帖子列表' } },
+      { path: '/admin/forum', component: forumTopic, meta: { title: '帖子列表' } },
     ],
   },
   {
-    path: '/type',
+    path: '/admin/type',
     component: layout,
     meta: {
       title: '分类管理',
@@ -91,14 +92,13 @@ const routes = [
       leaf: true,
     },
     children: [
-      { path: '/type', component: typeManage, meta: { title: '分类管理' } },
+      { path: '/admin/type', component: typeManage, meta: { title: '分类管理' } },
     ],
   },
 ];
 
 const router = new Router({
   mode: 'history',
-  base: '/admin/',
   routes,
 });
 
