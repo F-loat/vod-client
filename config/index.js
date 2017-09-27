@@ -23,13 +23,26 @@ module.exports = {
   },
   dev: {
     env: require('./dev.env'),
-    port: 8000,
+    port: 8080,
     autoOpenBrowser: false,
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
+      '/doubanio': {
+        target: 'http://img0.doubanio.com',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/doubanio': ''
+        },
+      },
+      '/douban': {
+        target: 'http://api.douban.com/v2/movie',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/douban': ''
+        }
+      },
       '/request': {
-        // target: 'https://vod.youngon.com.cn',
         target: 'http://127.0.0.1:7517',
         changeOrigin: true
       },

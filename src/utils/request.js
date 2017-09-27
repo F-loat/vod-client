@@ -6,7 +6,8 @@ const request = axios.create({
 });
 
 request.interceptors.request.use((config) => {
-  const { token } = localStorage;
+  store.commit('PROGRESS', true);
+  const { token } = sessionStorage;
   if (token) {
     Object.assign(config, {
       headers: { Authorization: `Bearer ${token}` },
@@ -18,13 +19,15 @@ request.interceptors.request.use((config) => {
 });
 
 request.interceptors.response.use((res) => {
+  store.commit('PROGRESS', false);
   const token = res.headers['set-authorization'];
-  if (token) localStorage.setItem('token', token);
+  if (token) sessionStorage.setItem('token', token);
   return res.data;
 }, (err) => {
+  store.commit('PROGRESS', false);
   const res = err.response;
   store.dispatch('showSnackbar', res.data || err.message);
-  if (res.status === 401 || res.status === 403) localStorage.removeItem('token');
+  if (res.status === 401 || res.status === 403) sessionStorage.removeItem('token');
   return null;
 });
 
