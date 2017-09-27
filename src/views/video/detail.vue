@@ -14,7 +14,9 @@
           value="episodes",
           title="选集")
       .side-content(v-if="activeTab === 'info'")
-        h2.video-title {{video.title}}
+        .video-title
+          h2 {{video.title}}
+          span(v-if="peerNum") （共{{peerNum}}人与你分享该视频）
         p.video-des 国家：{{String(video.countries || '').replace(',', '/')}}
         p.video-des 导演：{{String(video.directors || '').replace(',', '/')}}
         p.video-des 演员：{{String(video.performers || '').replace(',', '/')}}
@@ -57,11 +59,9 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
-import Hls from 'hls.js';
+import WebTorrent from 'webtorrent';
 import DPlayer from 'dplayer';
 import * as api from '@/api';
-
-window.Hls = Hls;
 
 export default {
   name: 'play',
@@ -73,6 +73,7 @@ export default {
       comments: [],
       comment: '',
       activeTab: 'info',
+      peerNum: 0,
     };
   },
   computed: {
@@ -85,10 +86,14 @@ export default {
     },
   },
   mounted() {
+    this.client = new WebTorrent();
     this.$nextTick(() => {
       this.getVideo();
       this.getEpisodes();
     });
+  },
+  beforeDestroy() {
+    this.client.destroy();
   },
   methods: {
     ...mapActions([
@@ -116,16 +121,32 @@ export default {
         this.$router.replace(`/play/${params.id}/${episodeId}`);
       }
       const episode = this.episodes.find(item => item._id === episodeId);
-      this.dplayer = new DPlayer({
-        loop: false,
-        screenshot: true,
-        theme: '#7e57c2',
-        video: {
-          url: `/assets/${episode.path}${episode.state === 2 ? '/index.m3u8' : ''}`,
-          pic: '/static/img/waiting.png',
-          type: 'auto',
-        },
-      });
+      if ('MediaSource' in window) {
+        this.dplayer = new DPlayer({
+          loop: false,
+          screenshot: true,
+          theme: '#7e57c2',
+        });
+        this.client.add(`${location.origin}/assets/${episode.path}.torrent`, (torrent) => {
+          const file = torrent.files.find(f => f.name.endsWith('.mp4'));
+          file.renderTo('.dplayer-video');
+          torrent.on('wire', (wire) => {
+            this.peerNum += 1;
+            wire.once('close', () => {
+              this.peerNum -= 1;
+            });
+          });
+        });
+      } else {
+        this.dplayer = new DPlayer({
+          loop: false,
+          screenshot: true,
+          theme: '#7e57c2',
+          video: {
+            url: `${location.origin}/assets/${episode.path}.mp4`,
+          },
+        });
+      }
       this.ready = true;
       this.getComments();
     },
@@ -140,7 +161,7 @@ export default {
     },
     async getComments() {
       const data = await api.indexComment({
-        belong: this.$route.params.episode,
+        belong: this.$route.params.id,
       });
       if (!data) return;
       this.comments = data.comments;
@@ -157,13 +178,14 @@ export default {
         return;
       }
       const data = await api.createComment({
-        belong: this.$route.params.episode,
+        belong: this.$route.params.id,
         content: this.comment,
       }, {
         type: 'topic',
       });
       if (!data) return;
       this.getComments();
+      this.comment = '';
     },
     handleTabChange(val) {
       this.activeTab = val;
@@ -209,9 +231,12 @@ export default {
     -webkit-appearance none
     opacity 0 !important
 .video-title
+  display flex
+  align-items baseline
   color #453d3d
   line-height 2
-  margin 10px 5px 0
+  h2
+    margin 10px 5px 0
 .video-des
   color #453d3d
   margin 0 5px

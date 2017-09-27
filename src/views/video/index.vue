@@ -92,6 +92,7 @@ export default {
       'screen',
     ]),
     cols() {
+      if (this.listWidth <= 480) return 3;
       return Math.round(this.listWidth / 160);
     },
     cellHeight() {

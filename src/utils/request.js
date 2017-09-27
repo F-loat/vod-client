@@ -24,6 +24,7 @@ request.interceptors.response.use((res) => {
 }, (err) => {
   const res = err.response;
   store.dispatch('showSnackbar', res.data || err.message);
+  if (res.status === 401 || res.status === 403) localStorage.removeItem('token');
   return null;
 });
 

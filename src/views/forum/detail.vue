@@ -98,6 +98,7 @@ export default {
         type: 'topic',
       });
       this.getComments();
+      this.comment = '';
     },
   },
 };

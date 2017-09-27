@@ -12,7 +12,6 @@ const createUser = (data, params) => request.post('/users', data, { params });
 const updateUser = (id, data, params) => request.put(`/users/${id}`, data, { params });
 const createToken = (data, params) => request.post('/tokens', data, { params });
 const destroyToken = params => request.del('/tokens', { params });
-// const wxoauthurl = params => request.get('/user/wxoauth/url', { params });
 
 const indexType = params => request.get('/types', { params });
 const showType = (id, params) => request.get(`/types/${id}`, { params });

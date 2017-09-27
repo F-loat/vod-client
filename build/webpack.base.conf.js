@@ -26,6 +26,10 @@ module.exports = {
       'muse-components': 'muse-ui/src'
     }
   },
+  target: 'web',
+  node: {
+    fs: 'empty'
+  },
   module: {
     rules: [
       {
