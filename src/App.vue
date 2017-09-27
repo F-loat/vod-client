@@ -1,0 +1,44 @@
+<template lang="pug">
+#q-app
+  transition(name="fade", mode="out-in")
+    router-view
+  q-ajax-bar(size="2px")
+</template>
+
+<script>
+import { QAjaxBar } from 'quasar'
+
+export default {
+  name: 'app',
+  components: {
+    QAjaxBar
+  },
+  mounted () {
+    this.getUser()
+  },
+  methods: {
+    getUser () {
+      const user = sessionStorage.getItem('user')
+      if (user) this.$store.commit('USER', JSON.parse(user))
+    }
+  }
+}
+</script>
+
+<style lang="stylus">
+body
+  overflow-x hidden
+
+.fade-enter-active,
+.fade-leave-active
+  transition all .2s ease
+
+.fade-enter,
+.fade-leave-active
+  opacity 0
+</style>
+
+<style lang="stylus" scoped>
+#q-app
+  width 100vw
+</style>
