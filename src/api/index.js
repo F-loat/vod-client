@@ -19,6 +19,7 @@ const destroyEpisode = (id, params) => request.delete(`/episodes/${id}`, { param
 
 const indexUser = params => request.get('/users', { params })
 const showUser = (id, params) => request.get(`/users/${id}`, { params })
+const createUser = data => request.post('/users', data)
 const updateUser = (id, data) => request.put(`/users/${id}`, data)
 const destroyUser = (id, params) => request.delete(`/users/${id}`, { params })
 
@@ -62,6 +63,7 @@ export {
   destroyEpisode,
   indexUser,
   showUser,
+  createUser,
   updateUser,
   destroyUser,
   createToken,

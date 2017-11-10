@@ -17,6 +17,10 @@ Vue.config.productionTip = false
 Vue.use(Quasar)
 Vue.use(Vuelidate)
 
+if (localStorage.token && !sessionStorage.token) {
+  sessionStorage.setItem('token', localStorage.token)
+}
+
 Quasar.start(() => {
   /* eslint-disable no-new */
   new Vue({
