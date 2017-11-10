@@ -7,6 +7,16 @@ const router = new VueRouter({
   // mode: 'history',
   routes: [
     {
+      path: '/',
+      name: 'layout-normal',
+      component: () => import('@/layout/normal'),
+      redirect: '/home',
+      children: [
+        { path: '/home', component: () => import('@/view/home'), meta: { title: '首页' } },
+        { path: '/video/:id/:episode?', component: () => import('@/view/video'), meta: { title: '视频详情' } }
+      ]
+    },
+    {
       path: '/admin',
       name: 'layout-admin',
       component: () => import('@/layout/admin'),

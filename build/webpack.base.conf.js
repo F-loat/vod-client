@@ -33,6 +33,10 @@ module.exports = {
     ],
     alias: config.aliases
   },
+  target: 'web',
+  node: {
+    fs: 'empty'
+  },
   module: {
     rules: [
       { // eslint

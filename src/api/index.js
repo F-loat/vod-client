@@ -36,7 +36,7 @@ const indexTopic = params => request.get('/topics', { params })
 const showTopic = (id, params) => request.get(`/topics/${id}`, { params })
 const destroyTopic = (id, params) => request.delete(`/topics/${id}`, { params })
 
-const createComment = data => request.post('/comments', data)
+const createComment = (data, params) => request.post('/comments', data, { params })
 const indexComment = params => request.get('/comments', { params })
 
 const indexLog = params => request.get('/logs', { params })
