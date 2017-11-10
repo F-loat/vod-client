@@ -25,19 +25,6 @@ export default {
 }
 </script>
 
-<style lang="stylus">
-body
-  overflow-x hidden
-
-.fade-enter-active,
-.fade-leave-active
-  transition all .2s ease
-
-.fade-enter,
-.fade-leave-active
-  opacity 0
-</style>
-
 <style lang="stylus" scoped>
 #q-app
   width 100vw
