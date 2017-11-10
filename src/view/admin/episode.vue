@@ -1,12 +1,14 @@
 <template lang="pug">
 q-infinite-scroll(ref="infiniteScroll", :handler="loadMore")
   q-data-table(
-    :data="topics",
+    :data="episodes",
     :config="config",
     :columns="columns",
     @refresh="refresher")
-    template(slot="selection", alot-scope="props")
-      q-btn(flat, color="primary", @click="deleteTopic(props)")
+    template(slot="selection", slot-scope="props")
+      q-btn(flat, color="primary", @click="transcodeEpisode(props)")
+        q-icon(name="polymer")
+      q-btn(flat, color="primary")
         q-icon(name="delete")
   .row.justify-center(v-if="params.page * params.limit < total")
     q-spinner-dots(slot="message", :size="40")
@@ -21,55 +23,50 @@ import {
   QDataTable,
   QBtn,
   QIcon,
+  QUploader,
   Dialog
 } from 'quasar'
 
 let loading = false
 
 export default {
-  name: 'forum',
+  name: 'Episode',
   components: {
     QInfiniteScroll,
     QSpinnerDots,
     QDataTable,
     QBtn,
-    QIcon
+    QIcon,
+    QUploader
   },
   data () {
     return {
-      topics: [],
+      episodes: [],
       total: 0,
       params: {
         page: 1,
         limit: 10
       },
       config: {
-        title: '帖子列表',
+        title: '视频列表',
         refresh: true,
         rowHeight: '50px',
         leftStickyColumns: 1,
         selection: 'single',
+        responsive: true,
         labels: {
           search: '搜索'
         }
       },
       columns: [
         {
-          label: '发帖人',
+          label: '标题',
+          field: 'name'
+        },
+        {
+          label: '创建人',
           field: 'creater',
           format: value => value.nickname
-        },
-        {
-          label: '标题',
-          field: 'title'
-        },
-        {
-          label: '浏览量',
-          field: 'visit'
-        },
-        {
-          label: '回复量',
-          field: 'reply'
         },
         {
           label: '创建时间',
@@ -80,14 +77,14 @@ export default {
     }
   },
   mounted () {
-    this.getTopics()
+    this.getEpisodes()
   },
   methods: {
-    async getTopics (init) {
+    async getEpisodes (init) {
       if (loading) return
       loading = true
       if (init) this.params.page = 1
-      const data = await api.indexTopic(this.params)
+      const data = await api.indexEpisode(this.params)
       loading = false
       if (!data) return
       Object.assign(this, data)
@@ -98,17 +95,17 @@ export default {
       }
     },
     async refresher (done) {
-      await this.getTopics(true)
+      await this.getEpisodes(true)
       done()
     },
     async loadMore (index, done) {
-      await this.getTopics()
+      await this.getEpisodes()
       done()
     },
-    deleteTopic (props) {
+    async transcodeEpisode (props) {
       Dialog.create({
-        title: '确认删除',
-        message: '将删除与该帖子相关的所有内容！',
+        title: '转码视频',
+        message: '立即开始转码该视频？',
         buttons: [
           {
             label: '取消'
@@ -116,10 +113,10 @@ export default {
           {
             label: '确定',
             handler: async () => {
-              const topic = props.rows[0].data
-              const rst = await api.destroyTopic(topic._id)
+              const episode = props.rows[0].data
+              const rst = await api.transcodeEpisode(episode._id)
               if (!rst) return
-              this.getTopics(true)
+              this.getEpisodes(true)
             }
           }
         ]
@@ -129,6 +126,5 @@ export default {
 }
 </script>
 
-<style lang="styl">
-
+<style lang="stylus" scoped>
 </style>

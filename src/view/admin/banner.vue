@@ -7,7 +7,7 @@ q-infinite-scroll(ref="infiniteScroll", :handler="loadMore")
     :config="config",
     :columns="columns",
     @refresh="refresher")
-    template(slot="selection", scope="props")
+    template(slot="selection", slot-scope="props")
       q-btn(flat, color="primary", @click="deleteBanner(props)")
         q-icon(name="delete")
   .row.justify-center(v-if="params.page * params.limit < total")
@@ -15,7 +15,7 @@ q-infinite-scroll(ref="infiniteScroll", :handler="loadMore")
 
   q-modal(ref="formModal", content-css="min-width: 360px; border-radius: 4px")
     q-uploader(
-      url="/request/files",
+      url="/api/files",
       :headers="uploadHeaders",
       extensions=".gif,.jpg,.jpeg,.png",
       float-label="轮换图",

@@ -3,43 +3,25 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
-function load (type, component) {
-  return () => import(`@/${type}/${component}.vue`)
-}
-
-export default new VueRouter({
+const router = new VueRouter({
   // mode: 'history',
-  beforeEach (to, from, next) {
-    if (to.path === '/login') {
-      sessionStorage.removeItem('token')
-      if (!to.query.redirect) {
-        return next({
-          path: '/login',
-          query: {
-            redirect: from.fullPath
-          }
-        })
-      }
-    }
-    return next()
-  },
   routes: [
     {
       path: '/admin',
-      alias: '/',
       name: 'layout-admin',
-      component: load('layout', 'admin'),
+      component: () => import('@/layout/admin'),
       redirect: '/admin/overview',
       children: [
-        { path: '/admin/overview', component: load('view', 'admin/index'), meta: { title: '概览', icon: 'equalizer' } },
-        { path: '/admin/video', component: load('view', 'admin/video'), meta: { title: '视频管理', icon: 'movie' } },
-        { path: '/admin/banner', component: load('view', 'admin/banner'), meta: { title: '轮换图管理', icon: 'photo' } },
-        { path: '/admin/user', component: load('view', 'admin/user'), meta: { title: '用户管理', icon: 'people' } },
-        { path: '/admin/forum', component: load('view', 'admin/forum'), meta: { title: '论坛管理', icon: 'whatshot' } },
+        { path: '/admin/overview', component: () => import('@/view/admin'), meta: { title: '概览', icon: 'equalizer' } },
+        { path: '/admin/video', component: () => import('@/view/admin/video'), meta: { title: '视频管理', icon: 'movie' } },
+        { path: '/admin/episode', component: () => import('@/view/admin/episode'), meta: { title: '剧集管理', icon: 'theaters' } },
+        { path: '/admin/banner', component: () => import('@/view/admin/banner'), meta: { title: '轮换图管理', icon: 'photo' } },
+        { path: '/admin/user', component: () => import('@/view/admin/user'), meta: { title: '用户管理', icon: 'people' } },
+        { path: '/admin/forum', component: () => import('@/view/admin/forum'), meta: { title: '论坛管理', icon: 'whatshot' } },
         {
           name: 'type',
           path: '/admin/type',
-          component: load('view', 'admin/type'),
+          component: () => import('@/view/admin/type'),
           meta: {
             title: '分类管理',
             icon: 'receipt',
@@ -56,7 +38,25 @@ export default new VueRouter({
         }
       ]
     },
-    { path: '/login', component: load('view', 'login') },
-    { path: '*', component: load('component', 'Error404') }
+    { path: '/login', component: () => import('@/view/login') },
+    { path: '*', component: () => import('@/component/Error404') }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  if (to.path === '/login') {
+    localStorage.clear()
+    sessionStorage.clear()
+    if (!to.query.redirect) {
+      return next({
+        path: '/login',
+        query: {
+          redirect: from.path === '/login' ? '/' : from.fullPath
+        }
+      })
+    }
+  }
+  return next()
+})
+
+export default router

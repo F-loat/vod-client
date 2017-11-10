@@ -2,10 +2,11 @@ import Vue from 'vue'
 import Quasar from 'quasar'
 import Vuelidate from 'vuelidate'
 import 'quasar-extras/material-icons'
+import App from './App'
 import store from './store'
 import router from './router'
 
-require(`quasar/dist/quasar.${__THEME}.css`)
+require('./theme/app.' + __THEME + '.styl')
 require(`quasar/dist/quasar.ie`)
 require(`quasar/dist/quasar.ie.${__THEME}.css`)
 if (__THEME === 'mat') {
@@ -22,6 +23,6 @@ Quasar.start(() => {
     el: '#q-app',
     store,
     router,
-    render: h => h(require('./App'))
+    render: h => h(App)
   })
 })

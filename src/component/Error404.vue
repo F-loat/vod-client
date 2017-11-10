@@ -11,7 +11,6 @@
           <q-btn
             v-if="canGoBack"
             color="primary"
-            push
             @click="goBack"
             icon="keyboard_arrow_left"
           >
@@ -19,7 +18,6 @@
           </q-btn>
           <q-btn
             color="primary"
-            push
             @click="$router.replace('/')"
             icon-right="home"
           >

@@ -9,16 +9,18 @@ q-layout(ref="layout", view="lHr LpR lFf", :right-breakpoint="900")
       q-icon(name="more_vert")
       q-popover(ref="popover")
         q-list(item-separator, link, style="min-width: 100px")
+          q-item(to="/") 前台界面
           q-item(to="/login") 退出
-  q-tabs(slot="navigation", v-if="$route.meta.tabs")
-    q-tab(
-      slot="title",
-      v-for="(tab, index) of $route.meta.tabs",
-      :key="index",
-      :default="index === 0",
-      :label="tab.label",
-      :icon="tab.icon",
-      @select="emitEvent(`${$route.name}-tab-change`, tab.type)")
+  template(slot="navigation", v-if="$route.meta.tabs")
+    q-tabs
+      q-tab(
+        slot="title",
+        v-for="(tab, index) of $route.meta.tabs",
+        :key="index",
+        :default="index === 0",
+        :label="tab.label",
+        :icon="tab.icon",
+        @select="emitEvent(`${$route.name}-tab-change`, tab.type)")
   q-list(slot="left", no-border, link, highlight)
     q-list-header 管理后台
     q-side-link(
@@ -106,15 +108,6 @@ export default {
   }
 }
 </script>
-
-<style lang="stylus">
-.q-toolbar
-  padding 10px 12px
-.q-item
-  padding 12px 16px
-.q-data-table-selection .q-btn
-  background-color #d0e6f9
-</style>
 
 <style lang="stylus" scoped>
 .fade-down-enter-active,

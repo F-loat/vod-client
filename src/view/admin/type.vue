@@ -7,7 +7,7 @@ q-infinite-scroll(ref="infiniteScroll", :handler="loadMore")
     :config="config",
     :columns="columns",
     @refresh="refresher")
-    template(slot="selection", scope="props")
+    template(slot="selection", alot-scope="props")
       q-btn(flat, color="primary", @click="changeType(props)")
         q-icon(name="edit")
       q-btn(flat, color="primary", @click="deleteType(props)")
@@ -32,7 +32,7 @@ import {
 let loading = false
 
 export default {
-  name: 'type',
+  name: 'admin-type',
   components: {
     QInfiniteScroll,
     QSpinnerDots,

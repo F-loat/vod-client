@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { Toast } from 'quasar'
+import router from '@/router'
 
 const request = axios.create({
-  baseURL: '/request'
+  baseURL: '/api'
 })
 
 request.interceptors.request.use((config) => {
@@ -24,7 +25,7 @@ request.interceptors.response.use((res) => {
 }, (err) => {
   const res = err.response
   Toast.create.negative(res.data || err.message)
-  if (res.status === 403 || res.status === 401) location.href = '/#login'
+  if (res.status === 403 || res.status === 401) router.push('/login')
   return null
 })
 
